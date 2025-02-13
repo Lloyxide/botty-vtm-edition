@@ -12,17 +12,11 @@ module.exports = {
             option.setName('skills')
                 .setDescription('Compétences du personnage (JSON)'))
         .addStringOption(option =>
-            option.setName('background')
+            option.setName('history')
                 .setDescription('Historique du personnage (JSON)'))
         .addStringOption(option =>
             option.setName('disciplines')
                 .setDescription('Disciplines du personnage (JSON)'))
-        .addStringOption(option =>
-            option.setName('merits')
-                .setDescription('Mérites du personnage (JSON)'))
-        .addStringOption(option =>
-            option.setName('flaws')
-                .setDescription('Défauts du personnage (JSON)'))
         .addIntegerOption(option =>
             option.setName('hunger')
                 .setDescription('Faim du personnage'))
@@ -64,10 +58,8 @@ module.exports = {
         const updates = {
             identity: getOption('identity'),
             skills: getOption('skills'),
-            background: getOption('background'),
+            history: getOption('history'),
             disciplines: getOption('disciplines'),
-            merits: getOption('merits'),
-            flaws: getOption('flaws'),
             hunger: getIntOption('hunger'),
             max_damage: getIntOption('max_health'),
             aggravated_damage: getIntOption('aggravated_damage'),
@@ -78,7 +70,7 @@ module.exports = {
         };
 
         // Vérifier la validité des champs JSON
-        for (let key of ['identity', 'skills', 'background', 'disciplines', 'merits', 'flaws']) {
+        for (let key of ['identity', 'skills', 'history', 'disciplines', 'merits', 'flaws']) {
             if (updates[key]) {
                 try {
                     JSON.parse(updates[key]);

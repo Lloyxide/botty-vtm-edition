@@ -11,12 +11,12 @@ module.exports = {
                 .setChoices(
                     { name: 'skills', value: 'skills' },
                     { name: 'disciplines', value: 'disciplines' },
-                    { name: 'background', value: 'background' },
+                    { name: 'history', value: 'history' },
                     { name: 'all', value: 'all' }
                 )),
     async execute(interaction) {
         const channel_id = interaction.channelId;
-        const section = interaction.options.getString('section') || 'all';
+        const section = interaction.options.getString('section');
 
         db.get('SELECT * FROM characters WHERE channel_id = ?', [channel_id], (err, row) => {
             if (err) {
@@ -28,9 +28,8 @@ module.exports = {
 
             try {
                 const identity = JSON.parse(row.identity);
-                const skills = row.skills ? JSON.parse(row.skills) : {};
                 const disciplines = row.disciplines ? JSON.parse(row.disciplines) : {};
-                const background = row.background ? JSON.parse(row.background) : {};
+                const history = row.history ? JSON.parse(row.history) : {};
 
                 const healthBar = formatHealth(row.aggravated_damage ?? 0, row.superficial_damage ?? 0, row.max_damage ?? 10);
                 const willpowerBar = formatHealth(row.aggravated_willpower ?? 0, row.superficial_willpower ?? 0, row.max_willpower ?? 10);
@@ -46,12 +45,28 @@ module.exports = {
                     );
 
                 if (section === 'all' || section === 'skills') {
-                    console.log(row)
-                    const { attributesText, skillsText } = formatAttributesAndSkills(row.skills.attributes, row.skills.skills);
+                    let skillsData;
+
+                    try {
+                        skillsData = JSON.parse(row.skills);
+                    } catch (error) {
+                        return interaction.reply({ content: "Erreur lors de la récupération des compétences.", ephemeral: true });
+                    }
+
+                    if (!skillsData || !skillsData.attributes || !skillsData.skills) {
+                        return interaction.reply({ content: "Les données d'attributs ou de compétences sont manquantes.", ephemeral: true });
+                    }
+
+                    const { attributes, skills, specialties } = skillsData;
                     embed.addFields(
-                        { name: 'Attributs', value: attributesText, inline: true },
-                        { name: 'Compétences', value: skillsText, inline: true }
+                        { name: '', value: '', inline: false },
+                        { name: '', value: '__**Attributs**__', inline: false },
+                        ...formatSkillsTable(attributes),
+                        { name: '', value: '__**Compétences**__', inline: false },
+                        ...formatSkillsTable(skills),
+                        { name: 'Spécialités', value: formatSpecialties(specialties), inline: false },
                     );
+
                 }
 
                 if (section === 'all' || section === 'disciplines') {
@@ -61,14 +76,17 @@ module.exports = {
                     embed.addFields({ name: 'Disciplines', value: disciplineText });
                 }
 
-                if (section === 'all' || section === 'background') {
-                    const backgroundText = Object.entries(background)
-                        .map(([key, value]) => `• **${key}**: ${value}`)
-                        .join('\n') || 'Aucun historique défini.';
-                    embed.addFields({ name: 'Historique', value: backgroundText });
+                if (section === 'all' || section === 'history') {
+                    embed.addFields(
+                        { name: '📜 __**Backgrounds**__', value: formatHistory(history.backgrounds), inline: false },
+                        { name: '✅ __**Mérites**__', value: formatHistory(history.merits), inline: false },
+                        { name: '❌ __**Défauts**__', value: formatHistory(history.flaws), inline: false }
+                    );
                 }
 
-                interaction.reply({ embeds: [embed], ephemeral: true });
+                embed.setFooter({ text: 'Gotham by Night - Fiche Personnage' });
+
+                interaction.reply({ embeds: [embed], ephemeral: false });
 
             } catch (e) {
                 console.error("Erreur de parsing JSON:", e);
@@ -88,51 +106,19 @@ function formatHealth(aggravated, superficial, max) {
         emptySquare.repeat(Math.max(0, max - aggravated - superficial));
 }
 
-function formatAttributesAndSkills(attributes, skills) {
-    console.log(attributes)
-    const attributesText = [
-        `**Force**: ${attributes.strength}`,
-        `**Dexterité**: ${attributes.dexterity}`,
-        `**Endurance**: ${attributes.stamina}`,
-        `**Charisme**: ${attributes.charisma}`,
-        `**Manipulation**: ${attributes.manipulation}`,
-        `**Composure**: ${attributes.composure}`,
-        `**Intelligence**: ${attributes.intelligence}`,
-        `**Wits**: ${attributes.wits}`,
-        `**Resolve**: ${attributes.resolve}`
-    ].join('\n');
+function formatSkillsTable(data) {
+    const entries = Object.entries(data);
+    let fields = [];
 
-    const skillsText = [
-        `**Athletics**: ${skills.athletics}`,
-        `**Brawl**: ${skills.brawl}`,
-        `**Craft**: ${skills.craft}`,
-        `**Drive**: ${skills.drive}`,
-        `**Firearms**: ${skills.firearms}`,
-        `**Larceny**: ${skills.larceny}`,
-        `**Melee**: ${skills.melee}`,
-        `**Stealth**: ${skills.stealth}`,
-        `**Survival**: ${skills.survival}`,
-        `**Animal Ken**: ${skills.animal_ken}`,
-        `**Etiquette**: ${skills.etiquette}`,
-        `**Insight**: ${skills.insight}`,
-        `**Intimidation**: ${skills.intimidation}`,
-        `**Leadership**: ${skills.leadership}`,
-        `**Performance**: ${skills.performance}`,
-        `**Persuasion**: ${skills.persuasion}`,
-        `**Streetwise**: ${skills.streetwise}`,
-        `**Subterfuge**: ${skills.subterfuge}`,
-        `**Academics**: ${skills.academics}`,
-        `**Awareness**: ${skills.awareness}`,
-        `**Finance**: ${skills.finance}`,
-        `**Investigation**: ${skills.investigation}`,
-        `**Medicine**: ${skills.medicine}`,
-        `**Occult**: ${skills.occult}`,
-        `**Politics**: ${skills.politics}`,
-        `**Science**: ${skills.science}`,
-        `**Technology**: ${skills.technology}`
-    ].join('\n');
+    for (let i = 0; i < entries.length; i += 3) {
+        const row = entries.slice(i, i + 3)
+            .map(([key, value]) => `**${key}**: ${'⦿'.repeat(value).padEnd(5, '○')}`)
+            .join('\n');
 
-    return { attributesText, skillsText };
+        fields.push({ name: '\u200B', value: row, inline: true });
+    }
+
+    return fields;
 }
 
 function formatDiscipline(discipline, level, skills) {
@@ -146,3 +132,23 @@ function formatDiscipline(discipline, level, skills) {
 
     return `**${discipline}** ${levelText}\n${skillsText}`;
 }
+
+function formatSpecialties(list) {
+    if (!list || list.length === 0) {
+        return "Aucun.";
+    }
+    return list.map(item => `- **${item.skill}** (${item.value}) : ${item.name}`).join('\n');
+}
+
+function formatHistory(histories) {
+    if (!histories || histories.length === 0) {
+        return "Aucun.";
+    }
+
+    return histories.map(item => {
+        const filled = "⦿".repeat(item.level);
+        const empty = "○".repeat(5 - item.level);
+        return `- **${item.name}** ${filled}${empty} : ${item.description}`;
+    }).join('\n');
+}
+
