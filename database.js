@@ -13,8 +13,27 @@ if (!fs.existsSync(dir)) {
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-    // Génération des tables
     db.run(`CREATE TABLE IF NOT EXISTS characters (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id TEXT NOT NULL,
+        identity JSON,
+        skills JSON,
+        background JSON,
+        disciplines JSON,
+        merits JSON,
+        flaws JSON,
+        hunger INTEGER DEFAULT 0,
+        max_damage INTEGER DEFAULT 0,
+        aggravated_damage INTEGER DEFAULT 0,
+        superficial_damage INTEGER DEFAULT 0,
+        max_willpower INTEGER DEFAULT 0,
+        aggravated_willpower INTEGER DEFAULT 0,
+        superficial_willpower INTEGER DEFAULT 0
+    );`);
+
+
+    // Génération des tables
+    /*db.run(`CREATE TABLE IF NOT EXISTS characters (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL,
         channel_id TEXT NOT NULL,
@@ -153,7 +172,7 @@ db.serialize(() => {
         id_background INT,
         FOREIGN KEY (id_character) REFERENCES characters(id),
         FOREIGN KEY (id_background) REFERENCES backgrounds(id)
-    );`);
+    );`);*/
 
 });
 
