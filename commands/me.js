@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database');
+const dictionary = require('../dictionary.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,17 +32,22 @@ module.exports = {
                 const disciplines = row.disciplines ? JSON.parse(row.disciplines) : {};
                 const history = row.history ? JSON.parse(row.history) : {};
 
-                const healthBar = formatHealth(row.aggravated_damage ?? 0, row.superficial_damage ?? 0, row.max_damage ?? 10);
-                const willpowerBar = formatHealth(row.aggravated_willpower ?? 0, row.superficial_willpower ?? 0, row.max_willpower ?? 10);
+                const hungerBar = formatSquares(row.hunger ?? 0, 0, 5);
+                const healthBar = formatSquares(row.aggravated_damage ?? 0, row.superficial_damage ?? 0, row.max_damage ?? 10);
+                const willpowerBar = formatSquares(row.aggravated_willpower ?? 0, row.superficial_willpower ?? 0, row.max_willpower ?? 10);
+                const humanityBar = formatSquares(identity.humanity ?? 0, row.stains ?? 0, 10);
 
 
                 const embed = new EmbedBuilder()
-                    .setTitle(`${identity.name}`)
-                    .setDescription(`**Clan:** ${identity.clan}`)
+                    .setTitle(identity.name)
+                    .setDescription(`**Clan:** ${identity.clan}\n**Génération:** ${identity.generation}\n**Prédation:** ${identity.predator_type}`)
                     .addFields(
-                        { name: 'Faim', value: (row.hunger ?? 0).toString(), inline: true },
-                        { name: 'Dégâts', value: healthBar, inline: false },
-                        { name: 'Volonté', value: willpowerBar, inline: false }
+                        { name: 'Faim', value: hungerBar, inline: true },
+                        { name: 'Dégâts', value: healthBar, inline: true },
+                        { name: 'Volonté', value: willpowerBar, inline: true }
+                    )
+                    .addFields(
+                        { name: 'Humanité', value: humanityBar, inline: true }
                     );
 
                 if (section === 'all' || section === 'skills') {
@@ -59,12 +65,14 @@ module.exports = {
 
                     const { attributes, skills, specialties } = skillsData;
                     embed.addFields(
-                        { name: '', value: '', inline: false },
-                        { name: '', value: '__**Attributs**__', inline: false },
+                        { name: '__**Attributs**__', value: '', inline: false },
+                        //{ name: 'Physique', value: '\u200B', inline: true },
+                        //{ name: 'Social', value: '\u200B', inline: true },
+                        //{ name: 'Mental', value: '\u200B', inline: true },
                         ...formatSkillsTable(attributes),
-                        { name: '', value: '__**Compétences**__', inline: false },
+                        { name: '__**Compétences**__', value: '', inline: false },
                         ...formatSkillsTable(skills),
-                        { name: 'Spécialités', value: formatSpecialties(specialties), inline: false },
+                        { name: '__**Spécialités**__', value: formatSpecialties(specialties), inline: false },
                     );
 
                 }
@@ -96,7 +104,7 @@ module.exports = {
     },
 };
 
-function formatHealth(aggravated, superficial, max) {
+function formatSquares(aggravated, superficial, max) {
     const fullSquare = '◼'; // Carré plein pour les dégâts aggravés
     const halfSquare = '⛝'; // Carré barré pour les dégâts superficiels
     const emptySquare = '◻'; // Carré vide pour les cases restantes
@@ -110,25 +118,36 @@ function formatSkillsTable(data) {
     const entries = Object.entries(data);
     let fields = [];
 
-    for (let i = 0; i < entries.length; i += 3) {
-        const row = entries.slice(i, i + 3)
-            .map(([key, value]) => `**${key}**: ${'⦿'.repeat(value).padEnd(5, '○')}`)
-            .join('\n');
+    const columnCount = 3;
+    const rows = [];
 
+    // Créer les lignes pour chaque colonne
+    for (let i = 0; i < entries.length; i++) {
+        const columnIndex = i % columnCount; // déterminer la colonne
+        if (!rows[columnIndex]) rows[columnIndex] = []; // si la colonne n'existe pas, créer une nouvelle colonne
+
+        const [key, value] = entries[i];
+        rows[columnIndex].push(`**${dictionary[key]}**: ${'⦿'.repeat(value).padEnd(5, '○')}`);
+    }
+
+    // Créer les champs pour Discord
+    for (let i = 0; i < Math.max(...rows.map(row => row.length)); i++) {
+        const row = rows.map(column => column[i] || '').join('\n');
         fields.push({ name: '\u200B', value: row, inline: true });
     }
+
 
     return fields;
 }
 
 function formatDiscipline(discipline, level, skills) {
     const fullCircle = '⦿'; // Cercle plein pour un niveau atteint
-    const emptyCircle = '◯'; // Cercle vide pour les niveaux restants
+    const emptyCircle = '○'; // Cercle vide pour les niveaux restants
 
     const levelText = fullCircle.repeat(level) + emptyCircle.repeat(5 - level);
 
     // Afficher les compétences associées
-    const skillsText = skills.map(skill => `${skill.name} (${skill.level}) - ${skill.description}`).join('\n');
+    const skillsText = skills.map(skill => `__**${skill.name}**__ (${skill.level}) - ${skill.description}`).join('\n');
 
     return `**${discipline}** ${levelText}\n${skillsText}`;
 }

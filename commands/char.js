@@ -37,7 +37,10 @@ module.exports = {
                 .setDescription('Volonté aggravée du personnage'))
         .addIntegerOption(option =>
             option.setName('superficial_willpower')
-                .setDescription('Volonté superficielle du personnage')),
+                .setDescription('Volonté superficielle du personnage'))
+        .addIntegerOption(option =>
+            option.setName('stains')
+                .setDescription('Flétrissures du personnage')),
 
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
@@ -67,6 +70,7 @@ module.exports = {
             max_willpower: getIntOption('max_willpower'),
             aggravated_willpower: getIntOption('aggravated_willpower'),
             superficial_willpower: getIntOption('superficial_willpower'),
+            stains: getIntOption('stains'),
         };
 
         // Vérifier la validité des champs JSON
@@ -108,11 +112,8 @@ module.exports = {
             } else {
                 // Création du personnage
                 const columns = ['channel_id', ...Object.keys(updates).filter(key => updates[key] !== null)];
-                console.log(columns)
                 const placeholders = columns.map(() => '?').join(', ');
-                console.log(placeholders)
                 const values = [channel_id, ...Object.values(updates).filter(value => value !== null)];
-                console.log(values)
 
                 db.run(`INSERT INTO characters (${columns.join(', ')}) VALUES (${placeholders})`, values, (err) => {
                     if (err) {
