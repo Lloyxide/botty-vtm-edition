@@ -8,8 +8,11 @@ const dictionary = {
     intelligence: 'Intelligence',
     wits: 'Astuce',
     resolve: 'Résolution',
+
     frenzy: 'Frénésie',
     humanity: 'Humanité',
+    exaltation: 'Exaltation',
+
     athletics: 'Athlétisme',
     brawl: 'Bagarre',
     craft: 'Artisanat',
@@ -36,7 +39,20 @@ const dictionary = {
     politics: 'Politique',
     science: 'Science',
     technology: 'Technologie',
-    awareness: 'Vigilance'
+    awareness: 'Vigilance',
+
+    animalism: 'Animalisme',
+    auspex: 'Auspex',
+    celerity: 'Célérité',
+    dominate: 'Domination',
+    fortitude: 'Force d\'âme',
+    obfuscate: 'Occultation',
+    oblivion: 'Obténébration',
+    potence: 'Puissance',
+    protean: 'Protéisme',
+    blood_sorcery: 'Sorcellerie du sang',
+    presence: 'Presence',
+    thin_blood_alchemy: 'Alchimie du sang clair'
 };
 
 module.exports = dictionary;

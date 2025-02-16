@@ -21,11 +21,12 @@ module.exports = {
                     { name: 'Astuce', value: 'wits' },
                     { name: 'Résolution', value: 'resolve' },
                     { name: 'Frénésie', value: 'frenzy' },
-                    { name: 'Humanité', value: 'humanity' }
+                    { name: 'Humanité', value: 'humanity' },
+                    { name: 'Exaltation', value: 'exaltation' }
                 ))
         .addStringOption(option =>
             option.setName('attribute2')
-                .setDescription('Deuxième attribut ou compétence')
+                .setDescription('Deuxième attribut')
                 .setRequired(false)
                 .setChoices(
                     { name: 'Force', value: 'strength' },
@@ -40,7 +41,7 @@ module.exports = {
                 ))
         .addStringOption(option =>
             option.setName('physical_skill')
-                .setDescription('Deuxième skill physique')
+                .setDescription('Skill physique')
                 .setRequired(false)
                 .setChoices(
                     { name: 'Athlétisme', value: 'athletics' },
@@ -55,7 +56,7 @@ module.exports = {
                 ))
         .addStringOption(option =>
             option.setName('social_skill')
-                .setDescription('Deuxième skill mental')
+                .setDescription('Skill mental')
                 .setRequired(false)
                 .setChoices(
                     { name: 'Animaux', value: 'animal_ken' },
@@ -70,7 +71,7 @@ module.exports = {
                 ))
         .addStringOption(option =>
             option.setName('mental_skill')
-                .setDescription('Deuxième skill social')
+                .setDescription('Skill social')
                 .setRequired(false)
                 .setChoices(
                     { name: 'Erudition', value: 'academics' },
@@ -84,17 +85,34 @@ module.exports = {
                     { name: 'Vigilance', value: 'awareness' }
                 ))
         .addStringOption(option =>
+            option.setName('discipline')
+                .setDescription('Discipline')
+                .setRequired(false)
+                .setChoices(
+                    { name: 'Alchimie du sang clair', value: 'thin_blood_alchemy' },
+                    { name: 'Animalisme', value: 'animalism' },
+                    { name: 'Auspex', value: 'auspex' },
+                    { name: 'Célérité', value: 'celerity' },
+                    { name: 'Domination', value: 'dominate' },
+                    { name: 'Force d\'âme', value: 'fortitude' },
+                    { name: 'Occultation', value: 'obfuscate' },
+                    { name: 'Obténébration', value: 'oblivion' },
+                    { name: 'Présence', value: 'presence' },
+                    { name: 'Protéisme', value: 'protean' },
+                    { name: 'Puissance', value: 'potence' },
+                    { name: 'Sorcellerie du sang', value: 'blood_sorcery' }
+                ))
+        .addStringOption(option =>
             option.setName('bonus_dices')
                 .setDescription('Dés Bonus ou Malus')
                 .setRequired(false)),
 
     async execute(interaction) {
         const channel_id = interaction.channelId;
-        let values = [interaction.options.getString('attribute1'), interaction.options.getString('attribute2'), interaction.options.getString('physical_skill'), interaction.options.getString('social_skill'), interaction.options.getString('mental_skill')]
+        let values = [interaction.options.getString('attribute1'), interaction.options.getString('attribute2'), interaction.options.getString('physical_skill'), interaction.options.getString('social_skill'), interaction.options.getString('mental_skill'), interaction.options.getString('discipline')]
         values = values.filter(value => value !== undefined && value !== null);
-        console.log(values)
 
-        db.get('SELECT max_willpower, aggravated_willpower, superficial_willpower, identity, stains, skills, hunger FROM characters WHERE channel_id = ?', [channel_id], (err, row) => {
+        db.get('SELECT max_willpower, aggravated_willpower, superficial_willpower, identity, stains, skills, disciplines, hunger FROM characters WHERE channel_id = ?', [channel_id], (err, row) => {
             if (err) {
                 return interaction.reply({ content: 'Erreur lors de la récupération du personnage.', ephemeral: true });
             }
@@ -104,6 +122,7 @@ module.exports = {
 
             try {
                 const characterData = JSON.parse(row.skills);
+                const disciplines = JSON.parse(row.disciplines);
                 const characterIdentity = JSON.parse(row.identity);
                 const currentWillpower = row.max_willpower - row.aggravated_willpower - row.superficial_willpower;
                 const attributes = characterData.attributes;
@@ -118,8 +137,10 @@ module.exports = {
                     dicePool += Math.floor(characterIdentity.humanity/3) + currentWillpower;
                 if(interaction.options.getString('attribute1') === "humanity")
                     dicePool += Math.max(10 - characterIdentity.humanity - row.stains, 1);
+                if(interaction.options.getString('attribute1') === "exaltation")
+                    dicePool += 1;
                 else
-                    values.forEach((value) => dicePool += getStat(attributes, skills, value));
+                    values.forEach((value) => dicePool += getStat(attributes, skills, disciplines, value));
 
                 if (dicePool === 0) {
                     return interaction.reply({ content: 'Les attributs/compétences choisis ne sont pas valides.', ephemeral: true });
@@ -195,7 +216,7 @@ module.exports = {
     }
 };
 
-function getStat(attributes, skills, toFind) {
+function getStat(attributes, skills, disciplines, toFind) {
     if(toFind === undefined)
         return 0;
 
@@ -203,6 +224,8 @@ function getStat(attributes, skills, toFind) {
         return attributes[toFind];
     } else if (skills[toFind]) {
         return skills[toFind];
+    } else if (disciplines[toFind]) {
+        return disciplines[toFind].level;
     }
 
     return 0;

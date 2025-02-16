@@ -149,7 +149,7 @@ function formatDiscipline(discipline, level, skills) {
     // Afficher les compétences associées
     const skillsText = skills.map(skill => `__**${skill.name}**__ (${skill.level}) - ${skill.description}`).join('\n');
 
-    return `**${discipline}** ${levelText}\n${skillsText}`;
+    return `**${dictionary[discipline]}** ${levelText}\n${skillsText}`;
 }
 
 function formatSpecialties(list) {
