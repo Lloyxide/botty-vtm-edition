@@ -133,14 +133,17 @@ module.exports = {
                 // Vérifier si les attributs/compétences existent
                 let dicePool = parseInt(bonusDices);
 
+                let rollHunger = false;
                 if(interaction.options.getString('attribute1') === "frenzy")
-                    dicePool += Math.floor(characterIdentity.humanity/3) + currentWillpower;
-                if(interaction.options.getString('attribute1') === "humanity")
+                    dicePool += Math.floor(characterIdentity.humanity / 3) + currentWillpower;
+                else if(interaction.options.getString('attribute1') === "humanity")
                     dicePool += Math.max(10 - characterIdentity.humanity - row.stains, 1);
-                if(interaction.options.getString('attribute1') === "exaltation")
+                else if(interaction.options.getString('attribute1') === "exaltation")
                     dicePool += 1;
-                else
+                else {
                     values.forEach((value) => dicePool += getStat(attributes, skills, disciplines, value));
+                    rollHunger = true;
+                }
 
                 if (dicePool === 0) {
                     return interaction.reply({ content: 'Les attributs/compétences choisis ne sont pas valides.', ephemeral: true });
@@ -152,8 +155,12 @@ module.exports = {
                     rolls.push(Math.floor(Math.random() * 10) + 1);
                 }
 
-                let hungerRolls = hunger > 0 ? rolls.slice(-hunger) : [];
-                let normalRolls = hunger > 0 ? rolls.slice(0, rolls.length - hunger) : rolls;
+                let totalDice = rolls.length;
+                let hungerDice = rollHunger ? Math.min(hunger, totalDice) : 0; // Tous les dés deviennent des dés de faim si hunger > totalDice
+                let normalDice = totalDice - hungerDice; // Si hunger >= totalDice, normalDice = 0
+
+                let hungerRolls = rolls.slice(-hungerDice);
+                let normalRolls = rolls.slice(0, normalDice); // Ne garde que les dés normaux s'il en reste
 
                 let successes = normalRolls.filter(die => die >= 6).length;
                 let hungerSuccesses = hungerRolls.filter(die => die >= 6).length;
@@ -165,6 +172,7 @@ module.exports = {
                 const filteredValues = values
                     .filter(value => value !== undefined && value !== null)
                     .map(value => dictionary[value]);
+
 
                 let str = filteredValues.join(' + ');
                 if(bonusDices > 0) str += " + " + bonusDices;
