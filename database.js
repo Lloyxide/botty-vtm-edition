@@ -38,6 +38,15 @@ db.serialize(() => {
         hunger INTEGER DEFAULT 0
     );`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS archives (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        date DATE,
+        author TEXT,
+        keywords JSON,
+        article TEXT
+    );`);
+
 });
 
 module.exports = db;

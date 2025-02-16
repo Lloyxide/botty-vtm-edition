@@ -5,6 +5,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('char')
         .setDescription('Créer ou mettre à jour un personnage')
+        .setDefaultMemberPermissions(8)
         .addStringOption(option =>
             option.setName('identity')
                 .setDescription('Identité du personnage (JSON)'))
