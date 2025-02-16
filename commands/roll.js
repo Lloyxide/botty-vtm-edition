@@ -156,11 +156,11 @@ module.exports = {
                 }
 
                 let totalDice = rolls.length;
-                let hungerDice = rollHunger ? Math.min(hunger, totalDice) : 0; // Tous les dés deviennent des dés de faim si hunger > totalDice
-                let normalDice = totalDice - hungerDice; // Si hunger >= totalDice, normalDice = 0
+                let hungerDice = rollHunger ? Math.min(hunger, totalDice) : 0;
+                let normalDice = totalDice - hungerDice;
 
-                let hungerRolls = rolls.slice(-hungerDice);
-                let normalRolls = rolls.slice(0, normalDice); // Ne garde que les dés normaux s'il en reste
+                let hungerRolls = hungerDice > 0 ? rolls.slice(-hungerDice) : [];
+                let normalRolls = rolls.slice(0, normalDice);
 
                 let successes = normalRolls.filter(die => die >= 6).length;
                 let hungerSuccesses = hungerRolls.filter(die => die >= 6).length;
@@ -204,6 +204,8 @@ module.exports = {
                     color = '#ff0000'; // Rouge pour un échec bestial
                 }
 
+                insertRollhistory(channel_id, str, rolls, hunger);
+
                 const embed = new EmbedBuilder()
                     .setColor(color)
                     .setTitle(status)
@@ -237,4 +239,21 @@ function getStat(attributes, skills, disciplines, toFind) {
     }
 
     return 0;
+}
+
+function insertRollhistory(channel_id, label, rolls, hunger) {
+    console.log("Inserting " + label + " " + rolls + " with hunger " + hunger);
+
+    db.run(
+        `INSERT INTO roll_history (channel_id, label, rolls, hunger) VALUES (?, ?, ?, ?)`,
+        [channel_id, label, JSON.stringify(rolls), hunger], // On passe les valeurs ici
+        (err) => {
+            if (err) {
+                console.log("Erreur lors de l'ajout du roll");
+                console.log(err);
+            } else {
+                console.log("Roll ajouté avec succès !");
+            }
+        }
+    );
 }
