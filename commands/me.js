@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database');
 const dictionary = require('../dictionary.js');
+const humanities = require('../docs/humanity.js');
+const blood_potencies = require('../docs/blood_potency.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,10 +12,12 @@ module.exports = {
             option.setName('section')
                 .setDescription('Section à afficher')
                 .setChoices(
-                    { name: 'skills', value: 'skills' },
-                    { name: 'disciplines', value: 'disciplines' },
-                    { name: 'history', value: 'history' },
-                    { name: 'all', value: 'all' }
+                    { name: 'Compétences & Attributs', value: 'skills' },
+                    { name: 'Disciplines', value: 'disciplines' },
+                    { name: 'Historique', value: 'history' },
+                    { name: 'Humanité', value: 'humanity' },
+                    { name: 'Puissance de Sang', value: 'blood_potency' },
+                    { name: 'Tout', value: 'all' }
                 )),
     async execute(interaction) {
         const channel_id = interaction.channelId;
@@ -89,6 +93,27 @@ module.exports = {
                         { name: '📜 __**Backgrounds**__', value: formatHistory(history.backgrounds), inline: false },
                         { name: '✅ __**Mérites**__', value: formatHistory(history.merits), inline: false },
                         { name: '❌ __**Défauts**__', value: formatHistory(history.flaws), inline: false }
+                    );
+                }
+
+                if (section === 'humanity') {
+                    const humanity = identity.humanity;
+                    const result = humanities.find(obj => obj.humanity === humanity);
+
+                    embed.addFields(
+                        { name: '__**Humanité ' + humanity + '**__', value: result.description, inline: false },
+                        { name: "", value: result.hook, inline: false },
+                        { name: "", value: " - " + result.effects.join('\n- '), inline: false }
+                    );
+                }
+
+                if (section === 'blood_potency') {
+                    const blood_potency = identity.blood_potency;
+                    const result = blood_potencies.find(obj => obj.level === blood_potency);
+
+                    embed.addFields(
+                        { name: '__**Puissance de sang ' + blood_potency + '**__', value: result.description, inline: false },
+                        { name: '', value: " - " + result.effects.join('\n - '), inline: false }
                     );
                 }
 

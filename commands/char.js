@@ -12,11 +12,11 @@ module.exports = {
             option.setName('skills')
                 .setDescription('Compétences du personnage (JSON)'))
         .addStringOption(option =>
-            option.setName('history')
-                .setDescription('Historique du personnage (JSON)'))
-        .addStringOption(option =>
             option.setName('disciplines')
                 .setDescription('Disciplines du personnage (JSON)'))
+        .addStringOption(option =>
+            option.setName('history')
+                .setDescription('Historique du personnage (JSON)'))
         .addIntegerOption(option =>
             option.setName('hunger')
                 .setDescription('Faim du personnage'))
