@@ -41,7 +41,10 @@ module.exports = {
                 .setDescription('Volonté superficielle du personnage'))
         .addIntegerOption(option =>
             option.setName('stains')
-                .setDescription('Flétrissures du personnage')),
+                .setDescription('Flétrissures du personnage'))
+        .addIntegerOption(option =>
+            option.setName('xp')
+                .setDescription('Expérience du personnage')),
 
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
@@ -72,6 +75,7 @@ module.exports = {
             aggravated_willpower: getIntOption('aggravated_willpower'),
             superficial_willpower: getIntOption('superficial_willpower'),
             stains: getIntOption('stains'),
+            xp: getIntOption('xp'),
         };
 
         // Vérifier la validité des champs JSON

@@ -27,7 +27,8 @@ db.serialize(() => {
         max_willpower INTEGER DEFAULT 0,
         aggravated_willpower INTEGER DEFAULT 0,
         superficial_willpower INTEGER DEFAULT 0,
-        stains INTEGER DEFAULT 0
+        stains INTEGER DEFAULT 0,
+        xp INTEGER DEFAULT 0
     );`);
 
     db.run(`CREATE TABLE IF NOT EXISTS roll_history (
