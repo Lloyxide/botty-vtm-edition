@@ -47,6 +47,12 @@ db.serialize(() => {
         article TEXT
     );`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS game_in_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        current_date_in_game DATE NOT NULL,
+        news_channel TEXT NOT NULL
+    );`);
+
 });
 
 module.exports = db;
