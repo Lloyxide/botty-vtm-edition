@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database');
+const moment = require("moment/moment");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,17 +21,31 @@ module.exports = {
         const author = interaction.options.getString('author') || null;
         const name = interaction.options.getString('name') || null;
 
-        if (name !== null) {
-            return searchDocument(interaction, name);
-        } else {
-            return searchArchives(interaction, keywords, author);
-        }
+        db.get('SELECT current_date_in_game, news_channel FROM game_in_progress', (err, row) => {
+            if (err || !row || !row.current_date_in_game) {
+                return interaction.reply({
+                    content: 'Aucune date définie. Utilisez `/date set [date]` d\'abord.',
+                    ephemeral: true
+                });
+            }
+
+            const timestamp = new Date(row.current_date_in_game).getTime() - 86400000;
+
+            if (name !== null) {
+                return searchDocument(interaction, name, timestamp);
+            } else {
+                return searchArchives(interaction, keywords, author, timestamp);
+            }
+
+        });
+
+
     },
 };
 
-function searchDocument(interaction, name) {
-    const query = 'SELECT * FROM archives WHERE name LIKE ? LIMIT 1';
-    db.get(query, [`%${name}%`], (err, row) => {
+function searchDocument(interaction, name, date) {
+    const query = 'SELECT * FROM archives WHERE name LIKE ? AND date <= ? LIMIT 1';
+    db.get(query, [`%${name}%`, date], (err, row) => {
         if (err) {
             console.error(err);
             return interaction.reply({ content: 'Erreur lors de la recherche des articles.', ephemeral: true });
@@ -40,13 +55,15 @@ function searchDocument(interaction, name) {
             return interaction.reply({ content: 'Aucun article trouvé.', ephemeral: false });
         }
 
+        const displayDate = row.date ? moment(row.date).format("DD/MM/YYYY") : 'Non renseigné';
+
         const embed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle("📜 " + row.name)
             .setDescription(row.article)
             .addFields(
                 { name: '', value: '**Auteur :** ' + (row.author || 'Non renseigné'), inline: false },
-                { name: '', value: '**Date :** ' + (row.date || 'Non renseigné'), inline: false }
+                { name: '', value: '**Date :** ' + (displayDate || 'Non renseigné'), inline: false }
             )
             .setFooter({ text: `Archives - Document #${row.id}` });
 
@@ -54,7 +71,7 @@ function searchDocument(interaction, name) {
     });
 }
 
-function searchArchives(interaction, keywords, author) {
+function searchArchives(interaction, keywords, author, date) {
     let query = 'SELECT * FROM archives WHERE';
     let params = [];
     let conditions = [];
@@ -75,7 +92,7 @@ function searchArchives(interaction, keywords, author) {
         return interaction.reply({ content: 'Veuillez spécifier au moins un critère de recherche.', ephemeral: true });
     }
 
-    query += ' ' + conditions.join(' OR ');
+    query += ' ' + conditions.join(' OR ') + " AND date <= " + date;
 
     db.all(query, params, (err, rows) => {
         if (err) {

@@ -1,12 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, time} = require('discord.js');
 const db = require('../database');
-const moment = require('moment');
+const moment = require('moment'); // Nécessite d'installer moment.js pour la gestion des dates
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('date')
         .setDescription('Gère la date de progression du jeu')
-        .setDefaultMemberPermissions(8)
         .addSubcommand(subcommand =>
             subcommand.setName('set')
                 .setDescription('Définit la date de progression du jeu')
@@ -20,7 +19,7 @@ module.exports = {
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
-        const channelId = interaction.channelId;
+        const channelId = interaction.channelId; // Channel où la commande est utilisée
 
         if (subcommand === 'set') {
             const dateInput = interaction.options.getString('date');
@@ -43,71 +42,46 @@ module.exports = {
 
         } else if (subcommand === 'next') {
             db.get('SELECT current_date_in_game, news_channel FROM game_in_progress', (err, row) => {
-                if (err || !row || !row.current_date_in_game) {
+                if (err || !row) {
                     return interaction.reply({ content: 'Aucune date définie. Utilisez `/date set [date]` d\'abord.', ephemeral: true });
                 }
 
-                console.log(`🔍 Date actuelle récupérée avant update: ${row.current_date_in_game}`);
+                const currentDate = moment(row.current_date_in_game, 'YYYY-MM-DD');
+                const nextDate = currentDate.clone().add(1, 'days').format('YYYY-MM-DD');
 
-                let currentDate = moment(row.current_date_in_game, 'YYYY-MM-DD');
-
-                if (!currentDate.isValid()) {
-                    return interaction.reply({ content: 'Erreur : la date enregistrée est invalide.', ephemeral: true });
-                }
-
-                const nextDate = currentDate.add(1, 'days').format('YYYY-MM-DD');
-                console.log(`➡️ Nouvelle date calculée: ${nextDate}`);
-
-                // 🔥 Suppression puis réinsertion pour éviter le problème d'update
-                db.run('DELETE FROM game_in_progress', (deleteErr) => {
-                    if (deleteErr) {
-                        console.error(deleteErr);
-                        return;
+                db.run('UPDATE game_in_progress SET current_date_in_game = ?', [nextDate], (updateErr) => {
+                    if (updateErr) {
+                        console.error(updateErr);
+                        return interaction.reply({ content: 'Erreur lors du passage au jour suivant.', ephemeral: true });
                     }
 
-                    db.run('INSERT INTO game_in_progress (current_date_in_game, news_channel) VALUES (?, ?)', [nextDate, row.news_channel], (insertErr) => {
-                        if (insertErr) {
-                            console.error(insertErr);
-                            return interaction.reply({ content: 'Erreur lors de la mise à jour de la date.', ephemeral: true });
+                    interaction.reply({ content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !`, ephemeral: false });
+
+                    const timestamp = new Date(nextDate).getTime()  - 86400000;
+                    console.log("new date is " + timestamp)
+
+                    // Rechercher les articles de la Gazette de Gotham à la nouvelle date
+                    db.all('SELECT * FROM archives WHERE date = ? AND author = ?', [timestamp, 'La Gazette de Gotham'], (searchErr, articles) => {
+                        if (searchErr) {
+                            console.error(searchErr);
+                            return;
                         }
 
-                        console.log(`✅ Nouvelle date confirmée par la DB: ${nextDate}`);
-                        const formattedDate = moment(nextDate).format('DD/MM/YYYY');
-                        //interaction.reply({ content: `📅 Le jeu avance au **${formattedDate}** !`, ephemeral: false });
+                        if (articles.length === 0) {
+                            return interaction.client.channels.fetch(row.news_channel)
+                                .then(channel => channel.send('📜 Aucune nouvelle publication aujourd\'hui.'));
+                        }
 
-                        interaction.client.channels.fetch(row.news_channel)
-                            .then(channel => channel.send({ content: `📅 Le jeu avance au **${formattedDate}** !`, ephemeral: false }))
-                            .catch(console.error);
+                        articles.forEach(article => {
+                            const embed = new EmbedBuilder()
+                                .setColor(0x0099ff)
+                                .setTitle(article.name)
+                                .setDescription(article.article)
+                                .setFooter({ text: `ID: ${article.id} | Gazette de Gotham` });
 
-                        console.log('SELECT * FROM archives WHERE date = ' + formattedDate + ' AND author = La Gazette de Gotham')
-
-                        // 🔎 **Rechercher les articles de la Gazette de Gotham**
-                        db.all('SELECT * FROM archives WHERE date = ? AND author LIKE ?', [formattedDate, 'La Gazette de Gotham'], (searchErr, articles) => {
-                            if (searchErr) {
-                                console.error(searchErr);
-                                return;
-                            }
-
-                            if (articles.length === 0) {
-                                return interaction.client.channels.fetch(row.news_channel)
-                                    .then(channel => channel.send('📜 Aucune nouvelle publication aujourd\'hui.'));
-                            }
-
-                            articles.forEach(article => {
-                                const embed = new EmbedBuilder()
-                                    .setColor(0x0099ff)
-                                    .setTitle("📜 " + article.name)
-                                    .setDescription(article.article)
-                                    .addFields(
-                                        { name: '', value: '**Auteur :** ' + (article.author || 'Non renseigné'), inline: false },
-                                        { name: '', value: '**Date :** ' + (article.date || 'Non renseigné'), inline: false }
-                                    )
-                                    .setFooter({ text: `Archives - Document #${article.id}` });
-
-                                interaction.client.channels.fetch(row.news_channel)
-                                    .then(channel => channel.send({ embeds: [embed] }))
-                                    .catch(console.error);
-                            });
+                            interaction.client.channels.fetch(row.news_channel)
+                                .then(channel => channel.send({ embeds: [embed] }))
+                                .catch(console.error);
                         });
                     });
                 });

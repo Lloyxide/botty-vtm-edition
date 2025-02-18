@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database');
+const moment = require("moment/moment");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -32,21 +33,31 @@ module.exports = {
         const author = interaction.options.getString('author') || null;
         const date = interaction.options.getString('date') || null;
 
+        // Conversion de la date en format yyyy-mm-dd
+        let formattedDate = null;
+        let timestamp;
+        if (date) {
+            const parsedDate = moment(date, "DD/MM/YYYY", true);
+            if (!parsedDate.isValid()) {
+                return interaction.reply({ content: 'Format de date invalide. Utilisez dd/mm/yyyy.', ephemeral: true });
+            }
+            formattedDate = parsedDate.format("YYYY-MM-DD");
+            timestamp = new Date("2025-02-18").getTime();
+        }
+
         const articleData = {
             name,
             author,
-            date,
+            date: timestamp,
             keywords: JSON.stringify(keywords),
             article,
         };
-
         db.run('INSERT INTO archives (name, author, date, keywords, article) VALUES (?, ?, ?, ?, ?)',
             [articleData.name, articleData.author, articleData.date, articleData.keywords, articleData.article], function(err) {
                 if (err) {
                     console.log(err);
                     return interaction.reply({ content: 'Erreur lors de l\'ajout de l\'article.', ephemeral: true });
                 }
-
                 const articleId = this.lastID;
 
                 const embed = new EmbedBuilder()
@@ -57,6 +68,7 @@ module.exports = {
                 if(author !== null) embed.addFields({ name: '', value: '**Auteur :** ' + author, inline: false });
                 if(date !== null) embed.addFields({ name: '', value: '**Date :** ' + date, inline: false });
 
+                console.log(article.length)
                 embed.addFields(
                     { name: '', value: '**Mots-clé :** ' + keywords.join(", "), inline: false },
                     { name: '', value: article, inline: false }
