@@ -15,6 +15,8 @@ module.exports = {
                     { name: 'Compétences & Attributs', value: 'skills' },
                     { name: 'Disciplines', value: 'disciplines' },
                     { name: 'Historique', value: 'history' },
+                    { name: 'Background', value: 'lore' },
+                    { name: 'Prédation', value: 'predator' },
                     { name: 'Humanité', value: 'humanity' },
                     { name: 'Puissance de Sang', value: 'blood_potency' },
                     { name: 'Tout', value: 'all' }
@@ -44,7 +46,7 @@ module.exports = {
 
                 const embed = new EmbedBuilder()
                     .setTitle(identity.name)
-                    .setDescription(`**Clan:** ${identity.clan}\n**Génération:** ${identity.generation}\n**Prédation:** ${identity.predator_type}`)
+                    .setDescription(`**Clan:** ${identity.clan}\n**Génération:** ${identity.generation}\n**Prédation:** ${identity.predatory.name}`)
                     .addFields(
                         { name: 'Faim', value: hungerBar, inline: true },
                         { name: 'Dégâts', value: healthBar, inline: true },
@@ -94,6 +96,21 @@ module.exports = {
                         { name: '✅ __**Mérites**__', value: formatHistory(history.merits), inline: false },
                         { name: '❌ __**Défauts**__', value: formatHistory(history.flaws), inline: false }
                     );
+                }
+
+                if (section === 'predator') {
+                    const predator = identity.predatory;
+
+                    console.log(predator)
+
+                    embed.addFields(
+                        { name: '', value: '__**Prédation**__ : ' + predator.name, inline: false },
+                        { name: "", value: predator.description, inline: false }
+                    );
+
+                    predator.rolls.forEach((roll) => {
+                        embed.addFields({ name: roll.roll, value: roll.description, inline: false })
+                    })
                 }
 
                 if (section === 'humanity') {
