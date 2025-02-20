@@ -47,7 +47,7 @@ module.exports = {
                 return interaction.reply({ content: 'Format de date invalide. Utilisez dd/mm/yyyy.', ephemeral: true });
             }
             formattedDate = parsedDate.format("YYYY-MM-DD");
-            timestamp = new Date("2025-02-18").getTime();
+            timestamp = new Date(formattedDate).getTime();
         }
 
         const articleData = {

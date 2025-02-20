@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, time} = require('discord.js');
 const db = require('../database');
 const moment = require("moment/moment");
 
@@ -31,6 +31,9 @@ module.exports = {
 
             const timestamp = new Date(row.current_date_in_game).getTime() - 86400000;
 
+            console.log(timestamp)
+            console.log(row.current_date_in_game)
+
             if (name !== null) {
                 return searchDocument(interaction, name, timestamp);
             } else {
@@ -44,7 +47,7 @@ module.exports = {
 };
 
 function searchDocument(interaction, name, date) {
-    const query = 'SELECT * FROM archives WHERE name LIKE ? AND (date <= ? || date IS NULL) LIMIT 1';
+    const query = 'SELECT * FROM archives WHERE name LIKE ? AND (date <= ? OR date IS NULL) LIMIT 1';
     db.get(query, [`%${name}%`, date], (err, row) => {
         if (err) {
             console.error(err);
@@ -102,7 +105,7 @@ function searchArchives(interaction, keywords, author, date) {
         return interaction.reply({ content: 'Veuillez spécifier au moins un critère de recherche.', ephemeral: true });
     }
 
-    query += ' ' + conditions.join(' OR ') + " AND (date <= " + date + " || date IS NULL)";
+    query += ' ' + conditions.join(' OR ') + " AND (date <= " + date + " OR date IS NULL)";
 
     db.all(query, params, (err, rows) => {
         if (err) {
@@ -115,7 +118,7 @@ function searchArchives(interaction, keywords, author, date) {
         }
 
         const results = rows.map(row => {
-            const dateText = row.date ? row.date : 'Date inconnue';
+            const dateText = row.date ? moment(row.date).format('DD/MM/YYYY') : 'Date inconnue';
             const authorText = row.author ? row.author : 'Auteur inconnu';
             return `• **${row.name}** (${dateText}, ${authorText})`;
         }).join('\n');
