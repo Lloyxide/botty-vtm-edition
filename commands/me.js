@@ -112,10 +112,30 @@ module.exports = {
                 }
 
                 if (section === 'lore') {
+                    const sire = identity.sire;
+                    const ambition = identity.ambition;
+                    const desire = identity.desire;
                     const touchstones = identity.touchstones;
                     const img = identity.img;
 
-                    embed.setImage(img);
+                    embed.addFields(
+                        { name: '', value: '__**Sire**__ : ' + (sire ? sire : "Inconnu."), inline: false },
+                        { name: '', value: '__**Désir**__ : ' + (desire ? desire : "Aucun."), inline: false },
+                        { name: '', value: '__**Ambition**__ : ' + (ambition ? ambition : "Aucune."), inline: false }
+                    );
+
+                    if (isValidUrl(img)) {
+                        checkImageUrl(img).then((exists) => {
+                            if (exists) {
+                                embed.setImage(img);
+                            } else {
+                                console.error("L'image n'existe pas :", img);
+                            }
+                        });
+                    } else {
+                        console.error("URL invalide :", img);
+                    }
+
 
                     let convictionsStr = "";
                     touchstones.forEach((touchstone) => {
@@ -233,3 +253,20 @@ function formatHistory(histories) {
     }).join('\n');
 }
 
+function isValidUrl(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
+async function checkImageUrl(url) {
+    try {
+        const response = await fetch(url, { method: "HEAD" });
+        return response.ok; // true si l'URL existe, false sinon
+    } catch (err) {
+        return false;
+    }
+}
