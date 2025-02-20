@@ -44,7 +44,7 @@ module.exports = {
 };
 
 function searchDocument(interaction, name, date) {
-    const query = 'SELECT * FROM archives WHERE name LIKE ? AND date <= ? LIMIT 1';
+    const query = 'SELECT * FROM archives WHERE name LIKE ? AND (date <= ? || date IS NULL) LIMIT 1';
     db.get(query, [`%${name}%`, date], (err, row) => {
         if (err) {
             console.error(err);
@@ -60,12 +60,22 @@ function searchDocument(interaction, name, date) {
         const embed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle("📜 " + row.name)
-            .setDescription(row.article)
-            .addFields(
-                { name: '', value: '**Auteur :** ' + (row.author || 'Non renseigné'), inline: false },
-                { name: '', value: '**Date :** ' + (displayDate || 'Non renseigné'), inline: false }
-            )
             .setFooter({ text: `Archives - Document #${row.id}` });
+
+        if(row.author)
+            embed.addFields({ name: '', value: '**Auteur :** ' + row.author, inline: false });
+
+        if(row.date)
+            embed.addFields({ name: '', value: '**Date :** ' + displayDate, inline: false });
+
+        const chunks = row.article.split('\n');
+        chunks.forEach((chunk, chunkIndex) => {
+            embed.addFields({
+                name: '',
+                value: chunk
+            });
+        });
+
 
         return interaction.reply({ embeds: [embed] });
     });
@@ -92,7 +102,7 @@ function searchArchives(interaction, keywords, author, date) {
         return interaction.reply({ content: 'Veuillez spécifier au moins un critère de recherche.', ephemeral: true });
     }
 
-    query += ' ' + conditions.join(' OR ') + " AND date <= " + date;
+    query += ' ' + conditions.join(' OR ') + " AND (date <= " + date + " || date IS NULL)";
 
     db.all(query, params, (err, rows) => {
         if (err) {

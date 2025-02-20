@@ -20,6 +20,9 @@ module.exports = {
                 .setDescription('Contenu de l\'article')
                 .setRequired(true))
         .addStringOption(option =>
+            option.setName('article_2')
+                .setDescription('Contenu de l\'article (partie 2)'))
+        .addStringOption(option =>
             option.setName('author')
                 .setDescription('Auteur de l\'article (optionnel)'))
         .addStringOption(option =>
@@ -29,7 +32,9 @@ module.exports = {
     async execute(interaction) {
         const name = interaction.options.getString('name');
         const keywords = interaction.options.getString('keywords').split(',').map(keyword => keyword.trim());
-        const article = interaction.options.getString('article');
+        let article = interaction.options.getString('article');
+        if(interaction.options.getString('article_2'))
+            article +=  '\n' + interaction.options.getString('article_2');
         const author = interaction.options.getString('author') || null;
         const date = interaction.options.getString('date') || null;
 
@@ -68,11 +73,17 @@ module.exports = {
                 if(author !== null) embed.addFields({ name: '', value: '**Auteur :** ' + author, inline: false });
                 if(date !== null) embed.addFields({ name: '', value: '**Date :** ' + date, inline: false });
 
-                console.log(article.length)
                 embed.addFields(
                     { name: '', value: '**Mots-clé :** ' + keywords.join(", "), inline: false },
-                    { name: '', value: article, inline: false }
                 );
+
+                const chunks = articleData.article.split('\n');
+                chunks.forEach((chunk, chunkIndex) => {
+                    embed.addFields({
+                        name: '',
+                        value: chunk
+                    });
+                });
 
                 return interaction.reply({ embeds: [embed] });
             });
