@@ -101,8 +101,6 @@ module.exports = {
                 if (section === 'predator') {
                     const predator = identity.predatory;
 
-                    console.log(predator)
-
                     embed.addFields(
                         { name: '', value: '__**Prédation**__ : ' + predator.name, inline: false },
                         { name: "", value: predator.description, inline: false }
@@ -111,6 +109,28 @@ module.exports = {
                     predator.rolls.forEach((roll) => {
                         embed.addFields({ name: roll.roll, value: roll.description, inline: false })
                     })
+                }
+
+                if (section === 'lore') {
+                    const touchstones = identity.touchstones;
+                    const img = identity.img;
+
+                    embed.setImage(img);
+
+                    let convictionsStr = "";
+                    touchstones.forEach((touchstone) => {
+                        convictionsStr += " - " + touchstone.conviction + "\n";
+                    })
+
+                    let touchstonesStr = "";
+                    touchstones.forEach((touchstone) => {
+                        touchstonesStr += " - " + touchstone.name + " : " + touchstone.description + "\n";
+                    })
+
+                    embed.addFields(
+                        { name: '__**Convictions**__', value: convictionsStr, inline: false },
+                        { name: '__**Touchstones**__', value: touchstonesStr, inline: false }
+                    );
                 }
 
                 if (section === 'humanity') {
