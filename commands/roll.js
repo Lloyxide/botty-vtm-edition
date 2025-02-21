@@ -242,17 +242,12 @@ function getStat(attributes, skills, disciplines, toFind) {
 }
 
 function insertRollhistory(channel_id, label, rolls, hunger) {
-    console.log("Inserting " + label + " " + rolls + " with hunger " + hunger);
-
     db.run(
         `INSERT INTO roll_history (channel_id, label, rolls, hunger) VALUES (?, ?, ?, ?)`,
         [channel_id, label, JSON.stringify(rolls), hunger], // On passe les valeurs ici
         (err) => {
             if (err) {
-                console.log("Erreur lors de l'ajout du roll");
                 console.log(err);
-            } else {
-                console.log("Roll ajouté avec succès !");
             }
         }
     );

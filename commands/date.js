@@ -58,7 +58,6 @@ module.exports = {
                     interaction.reply({ content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !`, ephemeral: false });
 
                     const timestamp = new Date(nextDate).getTime()  - 86400000;
-                    console.log("new date is " + timestamp)
 
                     // Rechercher les articles de la Gazette de Gotham à la nouvelle date
                     db.all('SELECT * FROM archives WHERE date = ? AND author = ?', [timestamp, 'La Gazette de Gotham'], (searchErr, articles) => {
