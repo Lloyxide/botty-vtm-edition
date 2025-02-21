@@ -3,6 +3,7 @@ const db = require('../database');
 const dictionary = require('../dictionary.js');
 const humanities = require('../docs/humanity.js');
 const blood_potencies = require('../docs/blood_potency.js');
+const bane_and_compulsions = require('../docs/compulsions.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,6 +19,7 @@ module.exports = {
                     { name: 'Background', value: 'lore' },
                     { name: 'Prédation', value: 'predator' },
                     { name: 'Humanité', value: 'humanity' },
+                    { name: 'Clan', value: 'clan' },
                     { name: 'Puissance de Sang', value: 'blood_potency' },
                     { name: 'Tout', value: 'all' }
                 )),
@@ -161,6 +163,18 @@ module.exports = {
                         { name: '__**Humanité ' + humanity + '**__', value: result.description, inline: false },
                         { name: "", value: result.hook, inline: false },
                         { name: "", value: " - " + result.effects.join('\n- '), inline: false }
+                    );
+                }
+
+                if (section === 'clan') {
+                    const clan = identity.clan;
+                    const result = bane_and_compulsions.find(obj => obj.clan === clan.toLowerCase());
+
+                    embed.addFields(
+                        { name: '__**Clan : ' + clan + '**__', value: '', inline: false },
+                        { name: "Fléau", value: result.bane, inline: false },
+                        { name: "Compulsion : " + result.compulsion_name, value: result.compulsion_description, inline: false },
+                        { name: "Frénésie", value: result.frenzy, inline: false }
                     );
                 }
 
