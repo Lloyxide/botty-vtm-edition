@@ -3,6 +3,111 @@ const db = require('../database');
 const dictionary = require('../dictionary.js');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('roll')
+        .setDescription('Lancer un jet de dés pour Vampire : La Mascarade')
+        .addStringOption(option =>
+            option.setName('attribute1')
+                .setDescription('Premier attribut ou compétence')
+                .setRequired(true)
+                .setChoices(
+                    { name: 'Force', value: 'strength' },
+                    { name: 'Dextérité', value: 'dexterity' },
+                    { name: 'Vigueur', value: 'stamina' },
+                    { name: 'Charisme', value: 'charisma' },
+                    { name: 'Manipulation', value: 'manipulation' },
+                    { name: 'Sang-froid', value: 'composure' },
+                    { name: 'Intelligence', value: 'intelligence' },
+                    { name: 'Astuce', value: 'wits' },
+                    { name: 'Résolution', value: 'resolve' },
+                    { name: 'Frénésie', value: 'frenzy' },
+                    { name: 'Humanité', value: 'humanity' },
+                    { name: 'Exaltation', value: 'exaltation' }
+                ))
+        .addStringOption(option =>
+            option.setName('attribute2')
+                .setDescription('Deuxième attribut')
+                .setRequired(false)
+                .setChoices(
+                    { name: 'Force', value: 'strength' },
+                    { name: 'Dextérité', value: 'dexterity' },
+                    { name: 'Vigueur', value: 'stamina' },
+                    { name: 'Charisme', value: 'charisma' },
+                    { name: 'Manipulation', value: 'manipulation' },
+                    { name: 'Sang-froid', value: 'composure' },
+                    { name: 'Intelligence', value: 'intelligence' },
+                    { name: 'Astuce', value: 'wits' },
+                    { name: 'Résolution', value: 'resolve' }
+                ))
+        .addStringOption(option =>
+            option.setName('physical_skill')
+                .setDescription('Skill physique')
+                .setRequired(false)
+                .setChoices(
+                    { name: 'Athlétisme', value: 'athletics' },
+                    { name: 'Bagarre', value: 'brawl' },
+                    { name: 'Artisanat', value: 'craft' },
+                    { name: 'Conduite', value: 'drive' },
+                    { name: 'Armes à feu', value: 'firearms' },
+                    { name: 'Larcin', value: 'larceny' },
+                    { name: 'Mêlée', value: 'melee' },
+                    { name: 'Discrétion', value: 'stealth' },
+                    { name: 'Survie', value: 'survival' }
+                ))
+        .addStringOption(option =>
+            option.setName('social_skill')
+                .setDescription('Skill mental')
+                .setRequired(false)
+                .setChoices(
+                    { name: 'Animaux', value: 'animal_ken' },
+                    { name: 'Commandement', value: 'leadership' },
+                    { name: 'Empathie', value: 'insigth' },
+                    { name: 'Étiquette', value: 'etiquette' },
+                    { name: 'Expérience de la rue', value: 'streetwise' },
+                    { name: 'Intimidation', value: 'intimidation' },
+                    { name: 'Persuasion', value: 'persuasion' },
+                    { name: 'Représentation', value: 'performance' },
+                    { name: 'Subterfuge', value: 'subterfuge' }
+                ))
+        .addStringOption(option =>
+            option.setName('mental_skill')
+                .setDescription('Skill social')
+                .setRequired(false)
+                .setChoices(
+                    { name: 'Erudition', value: 'academics' },
+                    { name: 'Finance', value: 'finance' },
+                    { name: 'Investigation', value: 'investigation' },
+                    { name: 'Médecine', value: 'medicine' },
+                    { name: 'Occultisme', value: 'occult' },
+                    { name: 'Politique', value: 'politics' },
+                    { name: 'Science', value: 'science' },
+                    { name: 'Technologie', value: 'technology' },
+                    { name: 'Vigilance', value: 'awareness' }
+                ))
+        .addStringOption(option =>
+            option.setName('discipline')
+                .setDescription('Discipline')
+                .setRequired(false)
+                .setChoices(
+                    { name: 'Alchimie du sang clair', value: 'thin_blood_alchemy' },
+                    { name: 'Animalisme', value: 'animalism' },
+                    { name: 'Auspex', value: 'auspex' },
+                    { name: 'Célérité', value: 'celerity' },
+                    { name: 'Domination', value: 'dominate' },
+                    { name: 'Force d\'âme', value: 'fortitude' },
+                    { name: 'Occultation', value: 'obfuscate' },
+                    { name: 'Obténébration', value: 'oblivion' },
+                    { name: 'Présence', value: 'presence' },
+                    { name: 'Protéisme', value: 'protean' },
+                    { name: 'Puissance', value: 'potence' },
+                    { name: 'Sorcellerie du sang', value: 'blood_sorcery' },
+                    { name: 'Temporis', value: 'temporis' }
+                ))
+        .addStringOption(option =>
+            option.setName('bonus_dices')
+                .setDescription('Dés Bonus ou Malus')
+                .setRequired(false)),
+
     async execute(interaction) {
         const channel_id = interaction.channelId;
         let values = [interaction.options.getString('attribute1'), interaction.options.getString('attribute2'), interaction.options.getString('physical_skill'), interaction.options.getString('social_skill'), interaction.options.getString('mental_skill'), interaction.options.getString('discipline')]
@@ -119,112 +224,7 @@ module.exports = {
                 return interaction.reply({ content: 'Erreur lors du traitement des données du personnage.', ephemeral: true });
             }
         });
-    },
-
-    data: new SlashCommandBuilder()
-        .setName('roll')
-        .setDescription('Lancer un jet de dés pour Vampire : La Mascarade')
-        .addStringOption(option =>
-            option.setName('attribute1')
-                .setDescription('Premier attribut ou compétence')
-                .setRequired(true)
-                .setChoices(
-                    { name: 'Force', value: 'strength' },
-                    { name: 'Dextérité', value: 'dexterity' },
-                    { name: 'Vigueur', value: 'stamina' },
-                    { name: 'Charisme', value: 'charisma' },
-                    { name: 'Manipulation', value: 'manipulation' },
-                    { name: 'Sang-froid', value: 'composure' },
-                    { name: 'Intelligence', value: 'intelligence' },
-                    { name: 'Astuce', value: 'wits' },
-                    { name: 'Résolution', value: 'resolve' },
-                    { name: 'Frénésie', value: 'frenzy' },
-                    { name: 'Humanité', value: 'humanity' },
-                    { name: 'Exaltation', value: 'exaltation' }
-                ))
-        .addStringOption(option =>
-            option.setName('attribute2')
-                .setDescription('Deuxième attribut')
-                .setRequired(false)
-                .setChoices(
-                    { name: 'Force', value: 'strength' },
-                    { name: 'Dextérité', value: 'dexterity' },
-                    { name: 'Vigueur', value: 'stamina' },
-                    { name: 'Charisme', value: 'charisma' },
-                    { name: 'Manipulation', value: 'manipulation' },
-                    { name: 'Sang-froid', value: 'composure' },
-                    { name: 'Intelligence', value: 'intelligence' },
-                    { name: 'Astuce', value: 'wits' },
-                    { name: 'Résolution', value: 'resolve' }
-                ))
-        .addStringOption(option =>
-            option.setName('physical_skill')
-                .setDescription('Skill physique')
-                .setRequired(false)
-                .setChoices(
-                    { name: 'Athlétisme', value: 'athletics' },
-                    { name: 'Bagarre', value: 'brawl' },
-                    { name: 'Artisanat', value: 'craft' },
-                    { name: 'Conduite', value: 'drive' },
-                    { name: 'Armes à feu', value: 'firearms' },
-                    { name: 'Larcin', value: 'larceny' },
-                    { name: 'Mêlée', value: 'melee' },
-                    { name: 'Discrétion', value: 'stealth' },
-                    { name: 'Survie', value: 'survival' }
-                ))
-        .addStringOption(option =>
-            option.setName('social_skill')
-                .setDescription('Skill mental')
-                .setRequired(false)
-                .setChoices(
-                    { name: 'Animaux', value: 'animal_ken' },
-                    { name: 'Commandement', value: 'leadership' },
-                    { name: 'Empathie', value: 'insigth' },
-                    { name: 'Étiquette', value: 'etiquette' },
-                    { name: 'Expérience de la rue', value: 'streetwise' },
-                    { name: 'Intimidation', value: 'intimidation' },
-                    { name: 'Persuasion', value: 'persuasion' },
-                    { name: 'Représentation', value: 'performance' },
-                    { name: 'Subterfuge', value: 'subterfuge' }
-                ))
-        .addStringOption(option =>
-            option.setName('mental_skill')
-                .setDescription('Skill social')
-                .setRequired(false)
-                .setChoices(
-                    { name: 'Erudition', value: 'academics' },
-                    { name: 'Finance', value: 'finance' },
-                    { name: 'Investigation', value: 'investigation' },
-                    { name: 'Médecine', value: 'medicine' },
-                    { name: 'Occultisme', value: 'occult' },
-                    { name: 'Politique', value: 'politics' },
-                    { name: 'Science', value: 'science' },
-                    { name: 'Technologie', value: 'technology' },
-                    { name: 'Vigilance', value: 'awareness' }
-                ))
-        .addStringOption(option =>
-            option.setName('discipline')
-                .setDescription('Discipline')
-                .setRequired(false)
-                .setChoices(
-                    { name: 'Alchimie du sang clair', value: 'thin_blood_alchemy' },
-                    { name: 'Animalisme', value: 'animalism' },
-                    { name: 'Auspex', value: 'auspex' },
-                    { name: 'Célérité', value: 'celerity' },
-                    { name: 'Domination', value: 'dominate' },
-                    { name: 'Force d\'âme', value: 'fortitude' },
-                    { name: 'Occultation', value: 'obfuscate' },
-                    { name: 'Obténébration', value: 'oblivion' },
-                    { name: 'Présence', value: 'presence' },
-                    { name: 'Protéisme', value: 'protean' },
-                    { name: 'Puissance', value: 'potence' },
-                    { name: 'Sorcellerie du sang', value: 'blood_sorcery' },
-                    { name: 'Temporis', value: 'temporis' }
-                ))
-        .addStringOption(option =>
-            option.setName('bonus_dices')
-                .setDescription('Dés Bonus ou Malus')
-                .setRequired(false))
+    }
 };
 
 function getStat(attributes, skills, disciplines, toFind) {
