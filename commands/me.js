@@ -86,10 +86,17 @@ module.exports = {
                 }
 
                 if (section === 'all' || section === 'disciplines') {
-                    const disciplineText = Object.entries(disciplines)
-                        .map(([key, value]) => formatDiscipline(value.name, value.level, value.skills))
-                        .join('\n\n') || 'Aucune discipline définie.';
-                    embed.addFields({ name: 'Disciplines', value: disciplineText });
+                    const disciplineFields = Object.entries(disciplines).map(([key, value]) => ({
+                        name: '', // Nom de la discipline
+                        value: formatDiscipline(value.name, value.level, value.skills) || 'Aucune information disponible.',
+                        inline: false, // Facultatif, à définir selon votre mise en page
+                    }));
+
+                    if (disciplineFields.length > 0) {
+                        embed.addFields(disciplineFields); // Ajout de chaque discipline comme un champ distinct
+                    } else {
+                        embed.addFields({ name: 'Disciplines', value: 'Aucune discipline définie.' });
+                    }
                 }
 
                 if (section === 'all' || section === 'history') {

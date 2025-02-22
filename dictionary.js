@@ -52,6 +52,7 @@ const dictionary = {
     protean: 'Protéisme',
     blood_sorcery: 'Sorcellerie du sang',
     presence: 'Presence',
+    temporis: 'Temporis',
     thin_blood_alchemy: 'Alchimie du sang clair'
 };
 
