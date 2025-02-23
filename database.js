@@ -20,6 +20,7 @@ db.serialize(() => {
         skills JSON,
         history JSON,
         disciplines JSON,
+        todolist JSON,
         hunger INTEGER DEFAULT 0,
         max_damage INTEGER DEFAULT 0,
         aggravated_damage INTEGER DEFAULT 0,

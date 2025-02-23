@@ -7,11 +7,11 @@ module.exports = {
         .setName('dmroll')
         .setDescription('Lancer un jet de dés pour Vampire : La Mascarade')
         .setDefaultMemberPermissions(8)
-        .addStringOption(option =>
+        .addIntegerOption(option =>
             option.setName('dices')
                 .setDescription('Nombre de D10')
                 .setRequired(true))
-        .addStringOption(option =>
+        .addIntegerOption(option =>
             option.setName('hunger')
                 .setDescription('Soif du jet')
                 .setRequired(false)),
