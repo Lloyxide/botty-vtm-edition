@@ -39,6 +39,8 @@ module.exports = {
                 const identity = JSON.parse(row.identity);
                 const disciplines = row.disciplines ? JSON.parse(row.disciplines) : {};
                 const history = row.history ? JSON.parse(row.history) : {};
+                const blood_potency = identity.blood_potency;
+                const current_blood_potency = blood_potencies.find(obj => obj.level === blood_potency);
 
                 const hungerBar = formatSquares(row.hunger ?? 0, 0, 5);
                 const healthBar = formatSquares(row.aggravated_damage ?? 0, row.superficial_damage ?? 0, row.max_damage ?? 10);
@@ -48,7 +50,7 @@ module.exports = {
 
                 const embed = new EmbedBuilder()
                     .setTitle(identity.name)
-                    .setDescription(`**Clan:** ${identity.clan}\n**Génération:** ${identity.generation}\n**Prédation:** ${identity.predatory.name}`)
+                    .setDescription(`**Clan :** ${identity.clan}\n**Génération :** ${identity.generation}\n**Prédation :** ${identity.predatory.name}\n**Score de Fléau :** ${current_blood_potency.bane_severity}`)
                     .addFields(
                         { name: 'Faim', value: hungerBar, inline: true },
                         { name: 'Dégâts', value: healthBar, inline: true },
@@ -186,12 +188,9 @@ module.exports = {
                 }
 
                 if (section === 'blood_potency') {
-                    const blood_potency = identity.blood_potency;
-                    const result = blood_potencies.find(obj => obj.level === blood_potency);
-
                     embed.addFields(
-                        { name: '__**Puissance de sang ' + blood_potency + '**__', value: result.description, inline: false },
-                        { name: '', value: " - " + result.effects.join('\n - '), inline: false }
+                        { name: '__**Puissance de sang ' + blood_potency + '**__', value: current_blood_potency.description, inline: false },
+                        { name: '', value: " - " + current_blood_potency.effects.join('\n - '), inline: false }
                     );
                 }
 

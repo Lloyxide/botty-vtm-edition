@@ -2,6 +2,7 @@ const blood_potencies = [
   {
     "level" : 0,
     "description" : "Le personnage est un Sang Clair, méprisé et rejeté par les véritables vampires.",
+    "bane_severity" : 0,
     "effects" : [
       "Il subit les dégâts comme un mortel. Lorsqu’il régénère des dégâts, il peut régénérer 1 point de dégâts superficiels par test d’Exaltation.",
       "Son score de Fléau est de 0, car il n’a pas de clan et donc pas de fléau.",
@@ -13,6 +14,7 @@ const blood_potencies = [
   {
     "level" : 1,
     "description" : "Le personnage est un véritable vampire, même si c’est d’extrême justesse aux yeux de certains anciens. Malgré tout, son Sang vampirique peut accomplir des choses spectaculaires lorsqu’il est exalté.",
+    "bane_severity" : 1,
     "effects" : [
       "Ajoutez un dé d’attribut au groupement du personnage s’il déclenche un Coup de sang.",
       "Le score de Fléau du personnage est de 1.",
@@ -23,6 +25,7 @@ const blood_potencies = [
   {
     "level" : 2,
     "description" : "Le personnage est un cran au-dessus des autres lécheurs, car son Sang alimente son existence vampirique mieux que le leur. Cependant, le sang ne venant pas directement d’un calice humain commence à perdre son pouvoir pour lui et n’a plus aucun goût depuis longtemps.",
+    "bane_severity" : 1,
     "effects" : [
       "Ajoutez un dé d’attribut au groupement du personnage s’il déclenche un Coup de sang.",
       "Le score de Fléau du personnage est de 1.",
@@ -35,6 +38,7 @@ const blood_potencies = [
   {
     "level" : 3,
     "description" : "Dans l’esprit des anciens les plus conservateurs, le Sang du personnage a suffisamment épaissi pour faire de lui non pas un simple lécheur, mais un véritable caïnite, méritant l’attention et le respect. Cependant, si son Sang lui confère des dons puissants, il nourrit aussi sa faiblesse de clan.",
+    "bane_severity" : 2,
     "effects" : [
       "Ajoutez deux dés d’attribut au groupement du personnage s’il déclenche un Coup de sang.",
       "Le score de Fléau du personnage est de 2.",
@@ -47,6 +51,7 @@ const blood_potencies = [
   {
     "level" : 4,
     "description" : "Le personnage est un cran au-dessus des autres lécheurs, car son Sang alimente son existence vampirique mieux que le leur. Cependant, le sang ne venant pas directement d’un calice humain commence à perdre son pouvoir pour lui et n’a plus aucun goût depuis longtemps.",
+    "bane_severity" : 2,
     "effects" : [
       "Ajoutez deux dés d’attribut au groupement du personnage s’il déclenche un Coup de sang.",
       "Le score de Fléau du personnage est de 2.",
@@ -60,6 +65,7 @@ const blood_potencies = [
   {
     "level" : 5,
     "description" : "Tout proche du statut d’ancien, le personnage n’est plus qu’à un pas alléchant de ce que beaucoup considéreraient comme le pouvoir d’un dieu vivant.",
+    "bane_severity" : 3,
     "effects" : [
       "Ajoutez trois dés d’attribut au groupement du personnage s’il déclenche un Coup de sang.",
       "Le score de Fléau du personnage est de 3.",

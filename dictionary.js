@@ -26,7 +26,7 @@ const dictionary = {
     leadership: 'Commandement',
     insight: 'Empathie',
     etiquette: 'Étiquette',
-    streetwise: 'Expérience de la rue',
+    streetwise: 'Exp. de la rue',
     intimidation: 'Intimidation',
     persuasion: 'Persuasion',
     performance: 'Représentation',
