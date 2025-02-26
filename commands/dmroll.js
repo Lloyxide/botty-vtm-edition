@@ -17,7 +17,7 @@ module.exports = {
                 .setRequired(false)),
 
     async execute(interaction) {
-        const dicePool = interaction.options.getString('dices');
+        const dicePool = interaction.options.getInteger('dices');
         const hunger = interaction.options.getString('hunger') || 0;
 
         if (dicePool <= 0) {

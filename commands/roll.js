@@ -61,7 +61,7 @@ module.exports = {
                 .setChoices(
                     { name: 'Animaux', value: 'animal_ken' },
                     { name: 'Commandement', value: 'leadership' },
-                    { name: 'Empathie', value: 'insigth' },
+                    { name: 'Empathie', value: 'insight' },
                     { name: 'Étiquette', value: 'etiquette' },
                     { name: 'Expérience de la rue', value: 'streetwise' },
                     { name: 'Intimidation', value: 'intimidation' },
