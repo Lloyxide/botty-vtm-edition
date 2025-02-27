@@ -47,7 +47,7 @@ module.exports = {
 };
 
 function searchDocument(interaction, name, date) {
-    const query = 'SELECT * FROM archives WHERE name LIKE ? AND (date <= ? OR date IS NULL) LIMIT 1';
+    const query = 'SELECT * FROM archives WHERE name = ? AND (date <= ? OR date IS NULL) LIMIT 1';
     db.get(query, [`%${name}%`, date], (err, row) => {
         if (err) {
             console.error(err);
