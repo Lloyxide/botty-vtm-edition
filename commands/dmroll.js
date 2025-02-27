@@ -18,7 +18,7 @@ module.exports = {
 
     async execute(interaction) {
         const dicePool = interaction.options.getInteger('dices');
-        const hunger = interaction.options.getString('hunger') || 0;
+        const hunger = interaction.options.getInteger('hunger') || 0;
 
         if (dicePool <= 0) {
             return interaction.reply({ content: 'Les attributs/compétences choisis ne sont pas valides.', ephemeral: true });
