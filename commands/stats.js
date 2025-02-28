@@ -79,7 +79,7 @@ async function generateBarChart(rollCounts, channel_id, interaction) {
     fs.writeFileSync(`./stats/stats_chart_${channel_id}.png`, buffer);
 
     // 📎 Attachement de l'image
-    const attachment = new AttachmentBuilder(`./stats_chart_${channel_id}.png`);
+    const attachment = new AttachmentBuilder(`./stats/stats_chart_${channel_id}.png`);
 
     // 📊 Embed avec l'image
     const embed = new EmbedBuilder()
