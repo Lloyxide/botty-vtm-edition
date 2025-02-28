@@ -76,7 +76,7 @@ async function generateBarChart(rollCounts, channel_id, interaction) {
 
     // Sauvegarde de l'image
     const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(`./stats_chart_${channel_id}.png`, buffer);
+    fs.writeFileSync(`./stats/stats_chart_${channel_id}.png`, buffer);
 
     // 📎 Attachement de l'image
     const attachment = new AttachmentBuilder(`./stats_chart_${channel_id}.png`);
