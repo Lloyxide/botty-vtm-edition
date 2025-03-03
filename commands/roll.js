@@ -22,7 +22,8 @@ module.exports = {
                     { name: 'Résolution', value: 'resolve' },
                     { name: 'Frénésie', value: 'frenzy' },
                     { name: 'Humanité', value: 'humanity' },
-                    { name: 'Exaltation', value: 'exaltation' }
+                    { name: 'Exaltation', value: 'exaltation' },
+                    { name: 'Reroll 3 dés (via Volonté)', value: 'reroll' }
                 ))
         .addStringOption(option =>
             option.setName('attribute2')
@@ -141,6 +142,8 @@ module.exports = {
                     dicePool += Math.max(10 - characterIdentity.humanity - row.stains, 1);
                 else if(interaction.options.getString('attribute1') === "exaltation")
                     dicePool += 1;
+                else if(interaction.options.getString('attribute1') === "reroll")
+                    dicePool += 3;
                 else {
                     values.forEach((value) => dicePool += getStat(attributes, skills, disciplines, value));
                     rollHunger = true;
