@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageEmbed, EmbedBuilder} = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../database');
 const dictionary = require('../dictionary.js');
 
@@ -23,7 +23,7 @@ module.exports = {
                     { name: 'Frénésie', value: 'frenzy' },
                     { name: 'Humanité', value: 'humanity' },
                     { name: 'Exaltation', value: 'exaltation' },
-                    { name: 'Reroll 3 dés (via Volonté)', value: 'reroll' }
+                    { name: 'Reroll de dés (via Volonté) - Ajouter des bonus_dice !', value: 'reroll' }
                 ))
         .addStringOption(option =>
             option.setName('attribute2')
@@ -114,12 +114,12 @@ module.exports = {
         let values = [interaction.options.getString('attribute1'), interaction.options.getString('attribute2'), interaction.options.getString('physical_skill'), interaction.options.getString('social_skill'), interaction.options.getString('mental_skill'), interaction.options.getString('discipline')]
         values = values.filter(value => value !== undefined && value !== null);
 
-        db.get('SELECT max_willpower, aggravated_willpower, superficial_willpower, identity, stains, skills, disciplines, hunger FROM characters WHERE channel_id = ?', [channel_id], (err, row) => {
+        db.get('SELECT max_willpower, aggravated_willpower, superficial_willpower, identity, stains, skills, disciplines, hunger FROM characters WHERE channel_id = ?', [channel_id], async (err, row) => {
             if (err) {
-                return interaction.reply({ content: 'Erreur lors de la récupération du personnage.', ephemeral: true });
+                return interaction.reply({content: 'Erreur lors de la récupération du personnage.', ephemeral: true});
             }
             if (!row) {
-                return interaction.reply({ content: 'Aucun personnage trouvé pour ce canal.', ephemeral: true });
+                return interaction.reply({content: 'Aucun personnage trouvé pour ce canal.', ephemeral: true});
             }
 
             try {
@@ -136,21 +136,31 @@ module.exports = {
                 let dicePool = parseInt(bonusDices);
 
                 let rollHunger = false;
-                if(interaction.options.getString('attribute1') === "frenzy")
+                let buttonRow = null;
+                let buttonToAdd = null;
+                if (interaction.options.getString('attribute1') === "frenzy")
                     dicePool += Math.floor(characterIdentity.humanity / 3) + currentWillpower;
-                else if(interaction.options.getString('attribute1') === "humanity")
+                else if (interaction.options.getString('attribute1') === "humanity")
                     dicePool += Math.max(10 - characterIdentity.humanity - row.stains, 1);
-                else if(interaction.options.getString('attribute1') === "exaltation")
+                else if (interaction.options.getString('attribute1') === "exaltation") {
+                    const { row, button } = createButton("Augmenter la soif", ButtonStyle.Danger, handleButtonClick, handleCollectorEnd);
+                    buttonRow = row;
+                    buttonToAdd = button;
                     dicePool += 1;
-                else if(interaction.options.getString('attribute1') === "reroll")
-                    dicePool += 3;
-                else {
+                } else if (interaction.options.getString('attribute1') === "reroll") {
+                    if(bonusDices <= 0) {
+                        return interaction.reply({content: 'Aucun nombre de dés donné pour ce reroll (utilisez bonus_dice pour définir le nombre)', ephemeral: true});
+                    }
+                } else {
                     values.forEach((value) => dicePool += getStat(attributes, skills, disciplines, value));
                     rollHunger = true;
                 }
 
                 if (dicePool === 0) {
-                    return interaction.reply({ content: 'Les attributs/compétences choisis ne sont pas valides.', ephemeral: true });
+                    return interaction.reply({
+                        content: 'Les attributs/compétences choisis ne sont pas valides.',
+                        ephemeral: true
+                    });
                 }
 
                 // Lancer les dés
@@ -179,8 +189,8 @@ module.exports = {
 
 
                 let str = filteredValues.join(' + ');
-                if(bonusDices > 0) str += " + " + bonusDices;
-                if(bonusDices < 0) str += " - " + Math.abs(bonusDices);
+                if (bonusDices > 0) str += " + " + bonusDices;
+                if (bonusDices < 0) str += " - " + Math.abs(bonusDices);
 
                 let totalSuccesses = successes + hungerSuccesses;
                 let bonusSuccesses = Math.floor((normalCriticals + hungerCriticals) / 2) * 2;
@@ -215,16 +225,38 @@ module.exports = {
                     .setTitle(status)
                     .setDescription(`**${str} :**`)
                     .addFields(
-                        { name: '🎲 Dés normaux', value: normalRolls.length > 0 ? normalRolls.join(', ') : 'Aucun', inline: true },
-                        { name: '🩸 Dés de Soif', value: hungerRolls.length > 0 ? hungerRolls.join(', ') : 'Aucun', inline: true },
-                        { name: '📊 Résultats', value: resultMessage }
+                        {
+                            name: '🎲 Dés normaux',
+                            value: normalRolls.length > 0 ? normalRolls.join(', ') : 'Aucun',
+                            inline: true
+                        },
+                        {
+                            name: '🩸 Dés de Soif',
+                            value: hungerRolls.length > 0 ? hungerRolls.join(', ') : 'Aucun',
+                            inline: true
+                        },
+                        {name: '📊 Résultats', value: resultMessage}
                     )
-                    .setFooter({ text: 'Gotham by Night - Jet de dés' });
+                    .setFooter({text: 'Gotham by Night - Jet de dés'});
 
-                interaction.reply({ embeds: [embed] });
+
+                if(buttonToAdd == null) {
+                    await interaction.reply({embeds: [embed]});
+                } else {
+                    const response = await interaction.reply({embeds: [embed], components: [buttonRow], fetchReply: true });
+                    // Création du collecteur
+                    const filter = i => i.customId === `hunger_increase` && i.user.id === interaction.user.id;
+                    const collector = response.createMessageComponentCollector({ filter, time: 60000, max: 1 });
+
+                    collector.on('collect', async i => handleButtonClick(i, interaction, buttonToAdd));
+                    collector.on('end', async collected => handleCollectorEnd(collected, interaction, buttonToAdd));
+                }
             } catch (err) {
                 console.error(err);
-                return interaction.reply({ content: 'Erreur lors du traitement des données du personnage.', ephemeral: true });
+                return interaction.reply({
+                    content: 'Erreur lors du traitement des données du personnage.',
+                    ephemeral: true
+                });
             }
         });
     }
@@ -256,3 +288,54 @@ function insertRollhistory(channel_id, label, rolls, hunger) {
         }
     );
 }
+
+// Fonction pour créer un bouton avec collecteur
+function createButton(text, style, lambdaOnCollect, lambdaOnEnd) {
+    const button = new ButtonBuilder()
+        .setCustomId(`hunger_increase`)
+        .setLabel(text)
+        .setStyle(style)
+        .setDisabled(false);
+
+    const row = new ActionRowBuilder().addComponents(button);
+
+    return { row, button, lambdaOnCollect, lambdaOnEnd };
+}
+
+// Lambda pour gérer le clic du bouton
+const handleButtonClick = async (i, interaction, button) => {
+    const channel_id = interaction.channelId;
+
+    db.get('SELECT hunger FROM characters WHERE channel_id = ?', [channel_id], async (err, row) => {
+        if (err) {
+            return i.reply({ content: 'Erreur lors de la récupération des données.', ephemeral: true });
+        }
+        if (!row) {
+            return i.reply({ content: 'Aucun personnage trouvé pour ce canal.', ephemeral: true });
+        }
+
+        if (row.hunger >= 5) {
+            button.setDisabled(true);
+            i.update({components: [new ActionRowBuilder().addComponents(button)]});
+            return interaction.channel.send('🩸 **Les problèmes commencent !** C\'est l\'heure du jet de frénésie pour résister à la faim (diff 4).');
+        }
+
+        // Mise à jour de la faim (+1)
+        db.run('UPDATE characters SET hunger = hunger + 1 WHERE channel_id = ?', [channel_id], (err) => {
+            if (err) {
+                return i.reply({ content: 'Erreur lors de la mise à jour de la faim.', ephemeral: true });
+            }
+
+            button.setDisabled(true);
+            i.update({ components: [new ActionRowBuilder().addComponents(button)] });
+        });
+    });
+};
+
+// Lambda pour gérer la fin du collecteur (expiré sans clic)
+const handleCollectorEnd = async (collected, interaction, button) => {
+    if (collected.size === 0) {
+        button.setDisabled(true);
+        await interaction.editReply({ components: [new ActionRowBuilder().addComponents(button)] });
+    }
+};

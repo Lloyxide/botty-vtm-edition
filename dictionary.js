@@ -12,6 +12,7 @@ const dictionary = {
     frenzy: 'Frénésie',
     humanity: 'Humanité',
     exaltation: 'Exaltation',
+    reroll: 'Reroll',
 
     athletics: 'Athlétisme',
     brawl: 'Bagarre',
