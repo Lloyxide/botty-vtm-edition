@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const db = require('../database');
+const {parse} = require("dotenv");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -95,6 +96,56 @@ module.exports = {
             }
 
             if (row) {
+                ['superficial_willpower', 'superficial_damage', 'aggravated_willpower', 'aggravated_damage', 'stains', 'hunger'].forEach(key => {
+                    if (updates[key] !== null && parseInt(updates[key]) !== 0) {
+                        updates[key] += row[key];
+                    }
+                });
+
+                if(updates.stains) {
+                    console.log("Checking stains and humanity")
+                    // Check if too much stains
+                    console.log("current total " + updates.stains)
+                    let humanity = JSON.parse(row.identity).humanity
+                    console.log("humanity " + humanity)
+
+                    if(humanity + updates.stains > 10) {
+                        console.log("Taken way too much stains !")
+                        let willpowerDmg = humanity + updates.stains - 10;
+                        console.log("Will take " + willpowerDmg + " superficial willpower damage")
+                        updates.stains -= willpowerDmg;
+                        console.log("Now has " + updates.stains)
+                        updates.superficial_willpower += willpowerDmg;
+                        console.log("Now has " + updates.superficial_willpower + " damages");
+
+                    }
+                }
+
+                if (updates.superficial_willpower) {
+                    let maxAllowedSuperficial = row.max_willpower - row.aggravated_willpower;
+                    if(!updates.aggravated_willpower)
+                        updates.aggravated_willpower = row.aggravated_willpower;
+
+                    if (updates.superficial_willpower > maxAllowedSuperficial) {
+                        let excessSuperficial = updates.superficial_willpower - maxAllowedSuperficial;
+                        updates.aggravated_willpower += excessSuperficial;
+                        updates.superficial_willpower = row.max_willpower - updates.aggravated_willpower;
+                    }
+                }
+
+                if (updates.superficial_damage) {
+                    let maxAllowedSuperficial = row.max_damage - row.aggravated_damage;
+                    if(!updates.aggravated_damage)
+                        updates.aggravated_damage = row.aggravated_damage;
+
+                    if (updates.superficial_damage > maxAllowedSuperficial) {
+                        let excessSuperficial = updates.superficial_damage - maxAllowedSuperficial;
+                        updates.aggravated_damage += excessSuperficial;
+                        updates.superficial_damage = row.max_damage - updates.aggravated_damage;
+                    }
+                }
+
+
                 // Mise à jour du personnage
                 const setClause = Object.entries(updates)
                     .filter(([_, value]) => value !== null)
@@ -131,4 +182,3 @@ module.exports = {
         });
     },
 };
-
