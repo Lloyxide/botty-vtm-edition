@@ -314,9 +314,10 @@ const handleButtonClick = async (i, interaction, button) => {
             return i.reply({ content: 'Aucun personnage trouvé pour ce canal.', ephemeral: true });
         }
 
+        button.setDisabled(true);
+        i.update({components: [new ActionRowBuilder().addComponents(button)]});
+
         if (row.hunger >= 5) {
-            button.setDisabled(true);
-            i.update({components: [new ActionRowBuilder().addComponents(button)]});
             return interaction.channel.send('🩸 **Les problèmes commencent !** C\'est l\'heure du jet de frénésie pour résister à la faim (diff 4).');
         }
 
@@ -325,9 +326,6 @@ const handleButtonClick = async (i, interaction, button) => {
             if (err) {
                 return i.reply({ content: 'Erreur lors de la mise à jour de la faim.', ephemeral: true });
             }
-
-            button.setDisabled(true);
-            i.update({ components: [new ActionRowBuilder().addComponents(button)] });
         });
     });
 };
