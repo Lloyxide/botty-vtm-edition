@@ -47,8 +47,9 @@ module.exports = {
 };
 
 function searchDocument(interaction, name, date) {
-    const query = 'SELECT * FROM archives WHERE name = ? AND (date <= ? OR date IS NULL) LIMIT 1';
-    db.get(query, [`%${name}%`, date], (err, row) => {
+    console.log(name)
+    const query = 'SELECT * FROM archives WHERE name = ? AND (date IS NULL OR date <= ?) LIMIT 1';
+    db.get(query, [name, date], (err, row) => {
         if (err) {
             console.error(err);
             return interaction.reply({ content: 'Erreur lors de la recherche des articles.', ephemeral: true });
