@@ -96,9 +96,11 @@ module.exports = {
             }
 
             if (row) {
-                ['superficial_willpower', 'superficial_damage', 'aggravated_willpower', 'aggravated_damage', 'stains', 'hunger'].forEach(key => {
+                ['superficial_willpower', 'superficial_damage', 'aggravated_willpower', 'aggravated_damage', 'stains', 'hunger', 'xp'].forEach(key => {
                     if (updates[key] !== null && parseInt(updates[key]) !== 0) {
                         updates[key] += row[key];
+                        if(updates[key] < 0)
+                            updates[key] = 0;
                     }
                 });
 
