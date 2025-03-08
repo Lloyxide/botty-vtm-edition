@@ -105,20 +105,12 @@ module.exports = {
                 });
 
                 if(updates.stains) {
-                    console.log("Checking stains and humanity")
-                    // Check if too much stains
-                    console.log("current total " + updates.stains)
                     let humanity = JSON.parse(row.identity).humanity
-                    console.log("humanity " + humanity)
 
                     if(humanity + updates.stains > 10) {
-                        console.log("Taken way too much stains !")
                         let willpowerDmg = humanity + updates.stains - 10;
-                        console.log("Will take " + willpowerDmg + " superficial willpower damage")
                         updates.stains -= willpowerDmg;
-                        console.log("Now has " + updates.stains)
                         updates.superficial_willpower += willpowerDmg;
-                        console.log("Now has " + updates.superficial_willpower + " damages");
 
                     }
                 }
