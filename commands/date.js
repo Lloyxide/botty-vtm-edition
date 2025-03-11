@@ -55,7 +55,9 @@ module.exports = {
                         return interaction.reply({ content: 'Erreur lors du passage au jour suivant.', ephemeral: true });
                     }
 
-                    interaction.reply({ content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !`, ephemeral: false });
+                    let {sunset, sunrise} = getSunsetSunrise(currentDate, nextDate);
+
+                    interaction.reply({ content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !\nLe soleil se couche à **${sunset}** et se lève à **${sunrise}**.`, ephemeral: false });
 
                     const timestamp = new Date(nextDate).getTime()  - 86400000;
 
@@ -88,3 +90,24 @@ module.exports = {
         }
     },
 };
+
+async function getSunsetSunrise(date1, date2, lat = 48.8566, lon = 2.3522) {
+    const fetchSunData = async (date) => {
+        const url = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&date=${date}&formatted=0`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results;
+    };
+
+    try {
+        const [data1, data2] = await Promise.all([fetchSunData(date1), fetchSunData(date2)]);
+
+        return {
+            sunset: new Date(data1.sunset).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" }),
+            sunrise: new Date(data2.sunrise).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" })
+        };
+    } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+        return null;
+    }
+}
