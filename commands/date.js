@@ -57,8 +57,6 @@ module.exports = {
 
                     try {
                         let { sunset, sunrise } = await getSunsetSunrise(currentDate, nextDate);
-                        console.log(sunset);
-                        console.log(sunrise);
 
                         await interaction.reply({
                             content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !\nLe soleil se couche à **${sunset}** et se lève à **${sunrise}**.`,
@@ -112,8 +110,7 @@ async function getSunsetSunrise(date1, date2, lat = 48.8566, lon = 2.3522) {
 
     try {
         const [data1, data2] = await Promise.all([fetchSunData(date1), fetchSunData(date2)]);
-        console.log(data1)
-        console.log(data2)
+
         return {
             sunset: new Date(data1.sunset).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" }),
             sunrise: new Date(data2.sunrise).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" })
