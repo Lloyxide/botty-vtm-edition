@@ -49,43 +49,54 @@ module.exports = {
                 const currentDate = moment(row.current_date_in_game, 'YYYY-MM-DD');
                 const nextDate = currentDate.clone().add(1, 'days').format('YYYY-MM-DD');
 
-                db.run('UPDATE game_in_progress SET current_date_in_game = ?', [nextDate], (updateErr) => {
+                db.run('UPDATE game_in_progress SET current_date_in_game = ?', [nextDate], async (updateErr) => { // Ajout de async ici
                     if (updateErr) {
                         console.error(updateErr);
                         return interaction.reply({ content: 'Erreur lors du passage au jour suivant.', ephemeral: true });
                     }
 
-                    let {sunset, sunrise} = getSunsetSunrise(currentDate, nextDate);
+                    try {
+                        let { sunset, sunrise } = await getSunsetSunrise(currentDate, nextDate);
+                        console.log(sunset);
+                        console.log(sunrise);
 
-                    interaction.reply({ content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !\nLe soleil se couche à **${sunset}** et se lève à **${sunrise}**.`, ephemeral: false });
-
-                    const timestamp = new Date(nextDate).getTime()  - 86400000;
-
-                    // Rechercher les articles de la Gazette de Gotham à la nouvelle date
-                    db.all('SELECT * FROM archives WHERE date = ? AND author = ?', [timestamp, 'La Gazette de Gotham'], (searchErr, articles) => {
-                        if (searchErr) {
-                            console.error(searchErr);
-                            return;
-                        }
-
-                        if (articles.length === 0) {
-                            return interaction.client.channels.fetch(row.news_channel)
-                                .then(channel => channel.send('📜 Aucune nouvelle publication aujourd\'hui.'));
-                        }
-
-                        articles.forEach(article => {
-                            const embed = new EmbedBuilder()
-                                .setColor(0x0099ff)
-                                .setTitle(article.name)
-                                .setDescription(article.article)
-                                .setFooter({ text: `ID: ${article.id} | Gazette de Gotham` });
-
-                            interaction.client.channels.fetch(row.news_channel)
-                                .then(channel => channel.send({ embeds: [embed] }))
-                                .catch(console.error);
+                        await interaction.reply({
+                            content: `📅 Le jeu avance à la nuit du **${currentDate.format('DD/MM/YYYY')}** au **${moment(nextDate).format('DD/MM/YYYY')}** !\nLe soleil se couche à **${sunset}** et se lève à **${sunrise}**.`,
+                            ephemeral: false
                         });
-                    });
+
+                        const timestamp = new Date(nextDate).getTime() - 86400000;
+
+                        // Rechercher les articles de la Gazette de Gotham à la nouvelle date
+                        db.all('SELECT * FROM archives WHERE date = ? AND author = ?', [timestamp, 'La Gazette de Gotham'], async (searchErr, articles) => {
+                            if (searchErr) {
+                                console.error(searchErr);
+                                return;
+                            }
+
+                            const channel = await interaction.client.channels.fetch(row.news_channel);
+
+                            if (articles.length === 0) {
+                                return channel.send('📜 Aucune nouvelle publication aujourd\'hui.');
+                            }
+
+                            for (const article of articles) {
+                                const embed = new EmbedBuilder()
+                                    .setColor(0x0099ff)
+                                    .setTitle(article.name)
+                                    .setDescription(article.article)
+                                    .setFooter({ text: `ID: ${article.id} | Gazette de Gotham` });
+
+                                await channel.send({ embeds: [embed] });
+                            }
+                        });
+
+                    } catch (err) {
+                        console.error(err);
+                        interaction.reply({ content: 'Erreur lors de la récupération des données.', ephemeral: true });
+                    }
                 });
+
             });
         }
     },
@@ -101,7 +112,8 @@ async function getSunsetSunrise(date1, date2, lat = 48.8566, lon = 2.3522) {
 
     try {
         const [data1, data2] = await Promise.all([fetchSunData(date1), fetchSunData(date2)]);
-
+        console.log(data1)
+        console.log(data2)
         return {
             sunset: new Date(data1.sunset).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" }),
             sunrise: new Date(data2.sunrise).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" })
