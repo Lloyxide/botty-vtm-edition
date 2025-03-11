@@ -62,44 +62,69 @@ function calculateMedian(arr) {
     return sorted.length % 2 !== 0 ? sorted[mid] : ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(2);
 }
 
-// 🎨 Fonction pour créer le Bar Chart
 async function generateBarChart(rollCounts, channel_id, interaction, totalRolls, average, median) {
     const width = 600;
     const height = 400;
+    const margin = 50;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 📊 Dessiner le graphique
+    // Fond blanc
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, width, height);
+
+    // Titre du graphique
     ctx.fillStyle = 'black';
     ctx.font = '20px Arial';
     ctx.fillText('Le Graph des dés', 180, 30);
 
+    // Paramètres des barres
     const barWidth = 40;
     const maxCount = Math.max(...rollCounts);
     const scale = maxCount > 0 ? (300 / maxCount) : 1;
 
+    // 📏 Ajouter une échelle sur l'axe Y
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.moveTo(margin, height - margin);
+    ctx.lineTo(margin, margin);
+    ctx.stroke();
+
+    // Graduation de l'axe Y (fréquences)
+    const step = Math.ceil(maxCount / 5); // Divise en 5 étapes
+    for (let i = 0; i <= 5; i++) {
+        let y = height - margin - (i * (300 / 5));
+        ctx.fillText((step * i).toString(), 10, y + 5);
+        ctx.beginPath();
+        ctx.moveTo(margin, y);
+        ctx.lineTo(width - margin, y);
+        ctx.strokeStyle = '#ddd'; // Lignes de guide
+        ctx.stroke();
+    }
+
+    // Dessin des barres
     for (let i = 0; i < 10; i++) {
         const barHeight = rollCounts[i] * scale;
         ctx.fillStyle = '#007bff';
-        ctx.fillRect(50 + i * 50, height - barHeight - 50, barWidth, barHeight);
+        ctx.fillRect(margin + 30 + i * 50, height - barHeight - margin, barWidth, barHeight);
+
+        // Ajouter le numéro en dessous
         ctx.fillStyle = 'black';
-        ctx.fillText((i + 1).toString(), 60 + i * 50, height - 20);
+        ctx.fillText((i + 1).toString(), margin + 40 + i * 50, height - 20);
     }
 
     // Sauvegarde de l'image
     const buffer = canvas.toBuffer('image/png');
     fs.writeFileSync(`./stats/stats_chart_${channel_id}.png`, buffer);
 
-    // 📎 Attachement de l'image
+    // Attachement de l'image
     const attachment = new AttachmentBuilder(`./stats/stats_chart_${channel_id}.png`);
 
-    // 📊 Embed avec statistiques
+    // Embed avec statistiques
     const embed = new EmbedBuilder()
         .setTitle("📊 Statistiques des jets de dés")
         .setDescription(`Voici la distribution des valeurs obtenues pour le salon <#${channel_id}> :\n\n`
-            + `**Total de jets** : ${totalRolls}\n`
+            + `**Total de dés lancés** : ${totalRolls}\n`
             + `**Moyenne** : ${average}\n`
             + `**Médiane** : ${median}`)
         .setImage('attachment://stats_chart.png')
@@ -107,3 +132,4 @@ async function generateBarChart(rollCounts, channel_id, interaction, totalRolls,
 
     await interaction.reply({ embeds: [embed], files: [attachment] });
 }
+
