@@ -209,7 +209,7 @@ module.exports = {
                 if (normalCriticals >= 1 && hungerCriticals >= 1) {
                     resultMessage += '\n⚡ **Triomphe Brutal !**';
                     totalSuccesses += 2;
-                    status = '⚡ **Succès Triomphal !**';
+                    status = '⚡ ** Triompe Brutal !**';
                 }
 
                 if (hungerFails >= 1) {
