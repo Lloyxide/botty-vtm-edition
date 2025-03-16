@@ -56,6 +56,8 @@ module.exports = {
                     }
 
                     try {
+                        await regenerateDailyWillpower();
+
                         let { sunset, sunrise } = await getSunsetSunrise(currentDate, nextDate);
 
                         await interaction.reply({
@@ -119,4 +121,21 @@ async function getSunsetSunrise(date1, date2, lat = 48.8566, lon = 2.3522) {
         console.error("Erreur lors de la récupération des données :", error);
         return null;
     }
+}
+
+async function regenerateDailyWillpower() {
+    return new Promise((resolve, reject) => {
+        db.run(`
+            UPDATE characters
+            SET superficial_willpower = MAX(superficial_willpower - daily_willpower_regeneration, 0)
+            WHERE daily_willpower_regeneration > 0
+        `, function (err) {
+            if (err) {
+                console.error("Erreur lors de la régénération de la volonté :", err);
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 }

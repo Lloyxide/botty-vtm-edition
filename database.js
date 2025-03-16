@@ -28,6 +28,7 @@ db.serialize(() => {
         max_willpower INTEGER DEFAULT 0,
         aggravated_willpower INTEGER DEFAULT 0,
         superficial_willpower INTEGER DEFAULT 0,
+        daily_willpower_regeneration INTEGER DEFAULT 0,
         stains INTEGER DEFAULT 0,
         xp INTEGER DEFAULT 0
     );`);
