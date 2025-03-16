@@ -114,7 +114,7 @@ module.exports = {
         let values = [interaction.options.getString('attribute1'), interaction.options.getString('attribute2'), interaction.options.getString('physical_skill'), interaction.options.getString('social_skill'), interaction.options.getString('mental_skill'), interaction.options.getString('discipline')]
         values = values.filter(value => value !== undefined && value !== null);
 
-        db.get('SELECT max_willpower, aggravated_willpower, superficial_willpower, identity, stains, skills, disciplines, hunger FROM characters WHERE channel_id = ?', [channel_id], async (err, row) => {
+        db.get('SELECT id, max_willpower, aggravated_willpower, superficial_willpower, identity, stains, skills, disciplines, hunger FROM characters WHERE channel_id = ?', [channel_id], async (err, row) => {
             if (err) {
                 return interaction.reply({content: 'Erreur lors de la récupération du personnage.', ephemeral: true});
             }
@@ -150,6 +150,8 @@ module.exports = {
                 } else if (interaction.options.getString('attribute1') === "reroll") {
                     if(bonusDices <= 0) {
                         return interaction.reply({content: 'Aucun nombre de dés donné pour ce reroll (utilisez bonus_dice pour définir le nombre)', ephemeral: true});
+                    } else {
+                        await addWillpowerDamage(row.id, interaction);
                     }
                 } else {
                     values.forEach((value) => dicePool += getStat(attributes, skills, disciplines, value));
@@ -337,3 +339,58 @@ const handleCollectorEnd = async (collected, interaction, button) => {
         await interaction.editReply({ components: [new ActionRowBuilder().addComponents(button)] });
     }
 };
+
+async function addWillpowerDamage(characterId, interaction) {
+    const channelId = interaction.channelId;
+    const channel = interaction.channel;
+    return new Promise((resolve, reject) => {
+        db.get('SELECT max_willpower, superficial_willpower, aggravated_willpower FROM characters WHERE id = ?', [characterId], async (err, row) => {
+            if (err || !row) {
+                console.error("Erreur lors de la récupération du personnage :", err);
+                return reject(err);
+            }
+
+            let { max_willpower, superficial_willpower, aggravated_willpower } = row;
+
+            // Ajoute un point de dégât superficiel
+            superficial_willpower += 1;
+
+            if (superficial_willpower + aggravated_willpower >= max_willpower) {
+                // Envoyer un message dans le channel d'affaiblissement
+                try {
+                    await channel.send("⚠️ Le personnage est **affaibli** ! -2 sur tous les jets de Social et de Mental.");
+                } catch (sendError) {
+                    console.error("Erreur lors de l'envoi du message :", sendError);
+                }
+            }
+
+            if (superficial_willpower + aggravated_willpower > max_willpower) {
+                // Si on dépasse le max, convertir un superficiel en aggravé
+                superficial_willpower -= 2;
+                aggravated_willpower += 1;
+
+                // Envoyer un message dans le channel d'affaiblissement
+                try {
+                    await channel.send("⚠️ Le personnage a pris un dégât de Willpower aggravé.");
+                } catch (sendError) {
+                    console.error("Erreur lors de l'envoi du message :", sendError);
+                }
+
+            }
+
+            // Mettre à jour les valeurs dans la base de données
+            db.run(`
+                UPDATE characters 
+                SET superficial_willpower = ?, aggravated_willpower = ? 
+                WHERE id = ?
+            `, [superficial_willpower, aggravated_willpower, characterId], function (updateErr) {
+                if (updateErr) {
+                    console.error("Erreur lors de la mise à jour des dégâts :", updateErr);
+                    return reject(updateErr);
+                }
+                resolve();
+            });
+        });
+    });
+}
+
